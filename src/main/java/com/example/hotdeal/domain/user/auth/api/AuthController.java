@@ -1,17 +1,19 @@
 package com.example.hotdeal.domain.user.auth.api;
 
 import com.example.hotdeal.domain.user.auth.application.AuthService;
-import com.example.hotdeal.domain.user.auth.model.SigninRequest;
-import com.example.hotdeal.domain.user.auth.model.SignupRequest;
-import com.example.hotdeal.domain.user.auth.model.UserResponse;
+import com.example.hotdeal.domain.user.auth.domain.SigninRequest;
+import com.example.hotdeal.domain.user.auth.domain.SignupRequest;
+import com.example.hotdeal.domain.user.auth.domain.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
