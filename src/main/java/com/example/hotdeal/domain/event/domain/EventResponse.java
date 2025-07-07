@@ -4,8 +4,7 @@ import com.example.hotdeal.domain.event.enums.EventType;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 @Getter
 public class EventResponse {
@@ -15,7 +14,7 @@ public class EventResponse {
     private final int event_discount;
     private final LocalDateTime start_event_time;
     private final LocalDateTime end_event_time;
-    private final List<Long> product_ids;
+    private final Set<Long> product_ids;
 
     public EventResponse(Event event) {
         this.event_id = event.getEvent_id();
