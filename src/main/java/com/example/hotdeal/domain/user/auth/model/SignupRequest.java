@@ -1,6 +1,5 @@
 package com.example.hotdeal.domain.user.auth.model;
 
-import com.example.hotdeal.domain.user.profile.model.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

@@ -5,7 +5,6 @@ import com.example.hotdeal.domain.user.auth.security.JwtUtil;
 import com.example.hotdeal.domain.user.auth.infra.AuthRepository;
 import com.example.hotdeal.domain.user.auth.model.SigninRequest;
 import com.example.hotdeal.domain.user.auth.model.SignupRequest;
-import com.example.hotdeal.domain.user.profile.model.User;
 import com.example.hotdeal.domain.user.auth.model.UserResponse;
 import com.example.hotdeal.global.enums.CustomErrorCode;
 import com.example.hotdeal.global.exception.CustomException;

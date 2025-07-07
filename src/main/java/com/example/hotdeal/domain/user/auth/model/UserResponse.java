@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class UserResponse {
-    private String token;
+    private final String token;
 
     public UserResponse(String token) {
         this.token = token;
