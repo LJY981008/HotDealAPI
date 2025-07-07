@@ -10,6 +10,7 @@ import com.example.hotdeal.global.enums.CustomErrorCode;
 import com.example.hotdeal.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +18,7 @@ public class AuthService {
     private final AuthRepository authRepository;
     private final JwtUtil jwtUtil;
 
+    @Transactional
     public UserResponse signup(SignupRequest signupRequest) {
         Auth user = signupRequest.toAuth();
         Auth savedUser = authRepository.save(user);
@@ -24,6 +26,7 @@ public class AuthService {
         return new UserResponse(token);
     }
 
+    @Transactional
     public UserResponse signin(SigninRequest signinRequest) {
         Auth user = authRepository.findByEmail(signinRequest.getEmail())
                 .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_USER));
