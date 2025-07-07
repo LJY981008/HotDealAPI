@@ -8,10 +8,10 @@ import java.util.List;
 @Getter
 public class EventAddProductRequest {
 
-    private List<Long> product_ids;
+    private List<Long> productIds;
 
     @AssertTrue
     private boolean verifyList() {
-        return !product_ids.isEmpty();
+        return !productIds.isEmpty();
     }
 }

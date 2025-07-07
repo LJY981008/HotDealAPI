@@ -15,29 +15,40 @@ import java.util.Set;
 @Table(name = "events")
 public class Event extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long event_id;
+    @Column(name = "event_id")
+    private Long eventId;
 
-    private Set<Long> product_ids;
-    private EventType event_type;
-    private int event_discount;
-    private int event_duration;
-    private LocalDateTime start_event_time;
+    @ElementCollection
+    @Column(name = "product_ids")
+    private Set<Long> productIds;
+
+    @Column(name = "event_type")
+    private EventType eventType;
+
+    @Column(name = "event_discount")
+    private int eventDiscount;
+
+    @Column(name = "event_duration")
+    private int eventDuration;
+
+    @Column(name = "start_event_time")
+    private LocalDateTime startEventTime;
 
     public Event() {}
 
-    public Event(EventType event_type, int event_discount, int event_duration, LocalDateTime start_event_time) {
-        this.event_type = event_type;
-        this.event_discount = event_discount;
-        this.event_duration = event_duration;
-        this.start_event_time = start_event_time;
-        this.product_ids = new HashSet<>();
+    public Event(EventType eventType, int eventDiscount, int eventDuration, LocalDateTime startEventTime) {
+        this.eventType = eventType;
+        this.eventDiscount = eventDiscount;
+        this.eventDuration = eventDuration;
+        this.startEventTime = startEventTime;
+        this.productIds = new HashSet<>();
     }
 
-    public void addEventToProduct(List<Long> product_ids) {
-        this.product_ids.addAll(product_ids);
+    public void addEventToProduct(List<Long> productIds) {
+        this.productIds.addAll(productIds);
     }
 
-    public void removeEventFromProduct(Long product_id) {
-        this.product_ids.remove(product_id);
+    public void removeEventFromProduct(Long productId) {
+        this.productIds.remove(productId);
     }
 }

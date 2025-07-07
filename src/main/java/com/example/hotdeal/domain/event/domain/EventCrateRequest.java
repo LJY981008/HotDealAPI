@@ -11,22 +11,22 @@ import java.time.LocalDateTime;
 public class EventCrateRequest {
 
     @NotNull
-    private EventType event_type;
+    private EventType eventType;
     @NotNull
-    private int event_discount;
+    private int eventDiscount;
     @NotNull
-    private int event_duration;
+    private int eventDuration;
     @NotNull
-    private LocalDateTime start_event_time;
+    private LocalDateTime startEventTime;
 
     @AssertTrue
     private boolean varifyDuration(){
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime endtime = start_event_time.plusDays(event_duration);
+        LocalDateTime endtime = startEventTime.plusDays(eventDuration);
         return now.isAfter(endtime);
     }
 
     public Event toEvent(){
-        return new Event(this.event_type, this.event_discount, this.event_duration, this.start_event_time);
+        return new Event(this.eventType, this.eventDiscount, this.eventDuration, this.startEventTime);
     }
 }
