@@ -26,7 +26,7 @@ public class EventService {
     public EventResponse addEventToProduct(Long eventId, EventAddProductRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_EVENT));
-        event.addEventToProduct(request.getProduct_ids());
+        event.addEventToProduct(request.getProductIds());
 
         return new EventResponse(event);
     }
