@@ -21,7 +21,7 @@ public class EventResponse {
         this.eventType = event.getEventType();
         this.eventDiscount = event.getEventDiscount();
         this.startEventTime = event.getStartEventTime();
-        this.endEventTime = event.getStartEventTime().plusDays(event.getEventDiscount());
+        this.endEventTime = event.getStartEventTime().plusDays(event.getEventDuration());
         this.productIds = event.getProductIds();
     }
 }

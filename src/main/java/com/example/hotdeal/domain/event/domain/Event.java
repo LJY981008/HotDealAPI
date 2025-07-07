@@ -20,7 +20,7 @@ public class Event extends BaseEntity {
 
     @ElementCollection
     @Column(name = "product_ids")
-    private Set<Long> productIds;
+    private Set<Long> productIds = new HashSet<>();
 
     @Column(name = "event_type")
     private EventType eventType;
@@ -41,7 +41,6 @@ public class Event extends BaseEntity {
         this.eventDiscount = eventDiscount;
         this.eventDuration = eventDuration;
         this.startEventTime = startEventTime;
-        this.productIds = new HashSet<>();
     }
 
     public void addEventToProduct(List<Long> productIds) {

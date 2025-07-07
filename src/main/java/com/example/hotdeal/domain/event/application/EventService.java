@@ -9,6 +9,7 @@ import com.example.hotdeal.global.enums.CustomErrorCode;
 import com.example.hotdeal.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ public class EventService {
 
     private final EventRepository eventRepository;
 
+    @Transactional
     public EventResponse createEvent(EventCrateRequest request) {
         Event event = request.toEvent();
         Event savedEvent = eventRepository.save(event);
@@ -23,6 +25,7 @@ public class EventService {
         return new EventResponse(savedEvent);
     }
 
+    @Transactional
     public EventResponse addEventToProduct(Long eventId, EventAddProductRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_EVENT));
@@ -31,6 +34,7 @@ public class EventService {
         return new EventResponse(event);
     }
 
+    @Transactional
     public EventResponse removeEventFromProduct(Long eventId, Long productId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_EVENT));
