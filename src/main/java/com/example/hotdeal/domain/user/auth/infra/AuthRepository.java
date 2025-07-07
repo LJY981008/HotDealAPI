@@ -1,6 +1,6 @@
 package com.example.hotdeal.domain.user.auth.infra;
 
-import com.example.hotdeal.domain.user.auth.model.Auth;
+import com.example.hotdeal.domain.user.auth.domain.Auth;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
