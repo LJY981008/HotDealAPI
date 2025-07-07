@@ -15,6 +15,6 @@ public class SignupRequest {
     private String password;
 
     public Auth toAuth() {
-        return new Auth(this.email);
+        return new Auth(this.email, this.username, this.password);
     }
 }
