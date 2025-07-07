@@ -13,13 +13,18 @@ public class OrderItem extends BaseEntity {
     @Column(name = "item_id")
     private Long item_id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    private Order order;
+
     private Long product_id;
+
+    private int quantity; // 주문 수량
 
     @Column(name = "order_item_count")
     private int order_item_count;
 
     @Column(name = "order_item_total_price")
     private int item_total_price;
-
 
 }

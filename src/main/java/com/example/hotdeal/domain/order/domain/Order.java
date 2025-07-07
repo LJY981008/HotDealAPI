@@ -20,11 +20,14 @@ public class Order extends BaseEntity {
 
     private Long user_id;
 
+    private int order_total_price;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
     private OrderStatus orderStatus;
 
-    @OneToMany(mappedBy = "orderItem")
-    private List<OrderItem> order_item_ids = new ArrayList<>();
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
 
     @Column(name = "ordering_time")
     private LocalDateTime order_time;
