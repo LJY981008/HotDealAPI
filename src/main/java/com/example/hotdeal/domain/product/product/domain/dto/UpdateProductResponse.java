@@ -6,14 +6,14 @@ import lombok.Getter;
 import java.math.BigDecimal;
 
 @Getter
-public class ProductCreateResponse {
+public class UpdateProductResponse {
 
     private final Long productId;
     private final String productName;
     private final String productDescription;
     private final BigDecimal productPrice;
 
-    public ProductCreateResponse(Product product) {
+    public UpdateProductResponse(Product product) {
         this.productId = product.getProductId();
         this.productName = product.getProductName();
         this.productDescription = product.getProductDescription();

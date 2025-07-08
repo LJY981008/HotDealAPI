@@ -10,7 +10,7 @@ import lombok.Getter;
 import java.math.BigDecimal;
 
 @Getter
-public class ProductCreateRequest {
+public class CreateProductRequest {
 
     @NotBlank(message = "상품명은 필수입니다")
     private String productName;

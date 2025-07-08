@@ -8,7 +8,7 @@ import org.hibernate.validator.constraints.URL;
 
 import java.math.BigDecimal;
 
-public record ProductUpdateRequest(
+public record UpdateProductRequest(
         @Size(min = 1, max = 200, message = "상품명은 1~200자 사이여야 합니다")
         String productName,
 

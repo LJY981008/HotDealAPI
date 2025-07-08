@@ -4,10 +4,10 @@ import com.example.hotdeal.domain.product.product.application.ProductService;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductListRequest;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import com.example.hotdeal.domain.product.product.domain.Product;
-import com.example.hotdeal.domain.product.product.domain.dto.ProductCreateRequest;
-import com.example.hotdeal.domain.product.product.domain.dto.ProductCreateResponse;
-import com.example.hotdeal.domain.product.product.domain.dto.ProductUpdateRequest;
-import com.example.hotdeal.domain.product.product.domain.dto.ProductUpdateResponse;
+import com.example.hotdeal.domain.product.product.domain.dto.CreateProductRequest;
+import com.example.hotdeal.domain.product.product.domain.dto.CreateProductResponse;
+import com.example.hotdeal.domain.product.product.domain.dto.UpdateProductRequest;
+import com.example.hotdeal.domain.product.product.domain.dto.UpdateProductResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,21 +25,30 @@ public class ProductController {
 
     private final ProductService productService;
 
+    // 이벤트용 상품 다건 조회 API
+    @GetMapping("/search-product")
+    public ResponseEntity<List<SearchProductResponse>> searchProducts(
+            @Valid @RequestBody SearchProductListRequest request
+    ) {
+        List<SearchProductResponse> products = productService.searchProductsByIds(request.getProductIds());
+        return ResponseEntity.ok(products);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductCreateResponse> createProduct(
-            @Valid @RequestBody ProductCreateRequest request
+    public ResponseEntity<CreateProductResponse> createProduct(
+            @Valid @RequestBody CreateProductRequest request
     ) {
-        ProductCreateResponse response = productService.createProduct(request);
+        CreateProductResponse response = productService.createProduct(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{productId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public ResponseEntity<ProductUpdateResponse> updateProduct(
+    public ResponseEntity<UpdateProductResponse> updateProduct(
             @PathVariable Long productId,
-            @Valid @RequestBody ProductUpdateRequest request
+            @Valid @RequestBody UpdateProductRequest request
     ) {
         Product product = productService.findById(productId);
 
@@ -51,7 +60,7 @@ public class ProductController {
                 request.productCategory()
         );
 
-        return ResponseEntity.ok(new ProductUpdateResponse(product));
+        return ResponseEntity.ok(new UpdateProductResponse(product));
     }
 
     @DeleteMapping("/{productId}")
@@ -61,13 +70,5 @@ public class ProductController {
     ) {
         productService.deleteProduct(productId);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/search-product")
-    public ResponseEntity<List<SearchProductResponse>> getProduct(
-            @Valid @RequestBody SearchProductListRequest searchProductListRequest
-    ){
-        List<SearchProductResponse> searchProductResponse = productService.getProduct(searchProductListRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(searchProductResponse);
     }
 }
