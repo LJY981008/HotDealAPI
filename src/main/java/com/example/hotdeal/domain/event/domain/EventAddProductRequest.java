@@ -11,7 +11,7 @@ public class EventAddProductRequest {
     private List<Long> productIds;
 
     @AssertTrue
-    private boolean verifyList() {
+    private boolean isValidList() {
         return !productIds.isEmpty();
     }
 }
