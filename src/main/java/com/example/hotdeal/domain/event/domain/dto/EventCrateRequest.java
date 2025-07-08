@@ -1,25 +1,36 @@
-package com.example.hotdeal.domain.event.domain;
+package com.example.hotdeal.domain.event.domain.dto;
 
+import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.enums.EventType;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
+/**
+ * 이벤트 생성 DTO
+ */
 @Getter
 public class EventCrateRequest {
 
     @NotNull
     private EventType eventType;
     @NotNull
-    private int eventDiscount;
+    private BigDecimal eventDiscount;
     @NotNull
     private int eventDuration;
     @NotNull
     private LocalDateTime startEventTime;
+
+    private List<Long> productIds;
+
+    @AssertTrue
+    private boolean isProductIdsValid() {
+        return !productIds.isEmpty();
+    }
 
     @AssertTrue(message = "이벤트 종료 시간은 현재 시간보다 이후여야 합니다")
     private boolean isEndTimeValid() {

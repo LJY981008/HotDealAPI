@@ -1,11 +1,13 @@
 package com.example.hotdeal.domain.product.product.api;
 
 import com.example.hotdeal.domain.product.product.application.ProductService;
-import com.example.hotdeal.domain.product.product.domain.command.Product;
-import com.example.hotdeal.domain.product.product.domain.command.dto.ProductCreateRequest;
-import com.example.hotdeal.domain.product.product.domain.command.dto.ProductCreateResponse;
-import com.example.hotdeal.domain.product.product.domain.command.dto.ProductUpdateRequest;
-import com.example.hotdeal.domain.product.product.domain.command.dto.ProductUpdateResponse;
+import com.example.hotdeal.domain.product.product.domain.dto.SearchProductListRequest;
+import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
+import com.example.hotdeal.domain.product.product.domain.Product;
+import com.example.hotdeal.domain.product.product.domain.dto.ProductCreateRequest;
+import com.example.hotdeal.domain.product.product.domain.dto.ProductCreateResponse;
+import com.example.hotdeal.domain.product.product.domain.dto.ProductUpdateRequest;
+import com.example.hotdeal.domain.product.product.domain.dto.ProductUpdateResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
@@ -57,5 +61,13 @@ public class ProductController {
     ) {
         productService.deleteProduct(productId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search-product")
+    public ResponseEntity<List<SearchProductResponse>> getProduct(
+            @Valid @RequestBody SearchProductListRequest searchProductListRequest
+    ){
+        List<SearchProductResponse> searchProductResponse = productService.getProduct(searchProductListRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(searchProductResponse);
     }
 }

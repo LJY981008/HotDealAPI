@@ -1,4 +1,4 @@
-package com.example.hotdeal.domain.product.product.domain.command;
+package com.example.hotdeal.domain.product.product.domain;
 
 import com.example.hotdeal.global.model.BaseEntity;
 import jakarta.persistence.*;
@@ -7,8 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter

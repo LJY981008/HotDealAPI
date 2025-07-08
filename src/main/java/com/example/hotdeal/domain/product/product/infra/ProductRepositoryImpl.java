@@ -1,6 +1,6 @@
 package com.example.hotdeal.domain.product.product.infra;
 
-import com.example.hotdeal.domain.product.product.domain.command.Product;
+import com.example.hotdeal.domain.product.product.domain.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

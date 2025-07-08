@@ -1,19 +1,19 @@
-package com.example.hotdeal.domain.product.product.domain.command.dto;
+package com.example.hotdeal.domain.product.product.domain.dto;
 
-import com.example.hotdeal.domain.product.product.domain.command.Product;
+import com.example.hotdeal.domain.product.product.domain.Product;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 
 @Getter
-public class ProductCreateResponse {
+public class ProductUpdateResponse {
 
     private final Long productId;
     private final String productName;
     private final String productDescription;
     private final BigDecimal productPrice;
 
-    public ProductCreateResponse(Product product) {
+    public ProductUpdateResponse(Product product) {
         this.productId = product.getProductId();
         this.productName = product.getProductName();
         this.productDescription = product.getProductDescription();

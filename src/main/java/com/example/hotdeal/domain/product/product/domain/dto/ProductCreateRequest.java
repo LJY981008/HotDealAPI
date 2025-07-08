@@ -1,7 +1,7 @@
-package com.example.hotdeal.domain.product.product.domain.command.dto;
+package com.example.hotdeal.domain.product.product.domain.dto;
 
-import com.example.hotdeal.domain.product.product.domain.command.Product;
-import com.example.hotdeal.domain.product.product.domain.command.ProductCategory;
+import com.example.hotdeal.domain.product.product.domain.Product;
+import com.example.hotdeal.domain.product.product.domain.ProductCategory;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
