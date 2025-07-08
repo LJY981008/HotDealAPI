@@ -1,27 +1,25 @@
-package com.example.hotdeal.domain.event.domain;
+package com.example.hotdeal.domain.event.domain.dto;
 
-import com.example.hotdeal.domain.event.enums.EventType;
+import com.example.hotdeal.domain.event.domain.entity.Event;
+import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 public class EventResponse {
 
     private final Long eventId;
-    private final EventType eventType;
-    private final int eventDiscount;
+    private final List<Long> productId;
     private final LocalDateTime startEventTime;
     private final LocalDateTime endEventTime;
-    private final Set<Long> productIds;
 
     public EventResponse(Event event) {
         this.eventId = event.getEventId();
-        this.eventType = event.getEventType();
-        this.eventDiscount = event.getEventDiscount();
+        this.productId = event.getProducts().stream().map(EventItem::getProductId).collect(Collectors.toList());
         this.startEventTime = event.getStartEventTime();
         this.endEventTime = event.getStartEventTime().plusDays(event.getEventDuration());
-        this.productIds = event.getProductIds();
     }
 }
