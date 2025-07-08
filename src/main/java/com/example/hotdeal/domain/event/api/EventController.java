@@ -24,22 +24,4 @@ public class EventController {
         EventResponse event = eventService.createEvent(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(event);
     }
-
-    @PatchMapping("/add-product")
-    public ResponseEntity<EventResponse> addEventToProduct(
-            @RequestParam Long eventId,
-            @Valid @RequestBody EventAddProductRequest request
-    ) {
-        EventResponse eventResponse = eventService.addEventToProduct(eventId, request);
-        return ResponseEntity.status(HttpStatus.OK).body(eventResponse);
-    }
-
-    @DeleteMapping("/remove-product")
-    public ResponseEntity<EventResponse> removeEventFromProduct(
-            @RequestParam Long eventId,
-            @RequestParam Long productId
-    ) {
-        EventResponse eventResponse = eventService.removeEventFromProduct(eventId, productId);
-        return ResponseEntity.status(HttpStatus.OK).body(eventResponse);
-    }
 }
