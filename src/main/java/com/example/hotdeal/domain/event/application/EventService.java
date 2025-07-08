@@ -1,9 +1,9 @@
 package com.example.hotdeal.domain.event.application;
 
-import com.example.hotdeal.domain.event.domain.Event;
-import com.example.hotdeal.domain.event.domain.EventAddProductRequest;
-import com.example.hotdeal.domain.event.domain.EventCrateRequest;
-import com.example.hotdeal.domain.event.domain.EventResponse;
+import com.example.hotdeal.domain.event.domain.entity.Event;
+import com.example.hotdeal.domain.event.domain.dto.EventAddProductRequest;
+import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
+import com.example.hotdeal.domain.event.domain.dto.EventResponse;
 import com.example.hotdeal.domain.event.infra.EventRepository;
 import com.example.hotdeal.domain.product.product.domain.AddEventResponse;
 import com.example.hotdeal.global.enums.CustomErrorCode;

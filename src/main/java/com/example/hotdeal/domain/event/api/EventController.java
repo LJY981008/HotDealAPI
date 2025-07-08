@@ -1,16 +1,14 @@
 package com.example.hotdeal.domain.event.api;
 
 import com.example.hotdeal.domain.event.application.EventService;
-import com.example.hotdeal.domain.event.domain.EventAddProductRequest;
-import com.example.hotdeal.domain.event.domain.EventCrateRequest;
-import com.example.hotdeal.domain.event.domain.EventResponse;
+import com.example.hotdeal.domain.event.domain.dto.EventAddProductRequest;
+import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
+import com.example.hotdeal.domain.event.domain.dto.EventResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/event")
