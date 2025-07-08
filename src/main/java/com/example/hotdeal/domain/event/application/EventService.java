@@ -1,5 +1,6 @@
 package com.example.hotdeal.domain.event.application;
 
+import com.example.hotdeal.domain.event.domain.ProductEventAddedEvent;
 import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.domain.dto.EventAddProductRequest;
 import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
@@ -7,6 +8,7 @@ import com.example.hotdeal.domain.event.domain.dto.EventResponse;
 import com.example.hotdeal.domain.event.infra.EventRepository;
 import com.example.hotdeal.domain.product.product.domain.AddEventResponse;
 import com.example.hotdeal.global.enums.CustomErrorCode;
+import com.example.hotdeal.global.event.model.EventPublisher;
 import com.example.hotdeal.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
@@ -26,7 +28,7 @@ import java.util.List;
 public class EventService {
 
     private final EventRepository eventRepository;
-    private final RestTemplate restTemplate;
+    private final EventPublisher eventPublisher;
 
     @Transactional
     public EventResponse createEvent(EventCrateRequest request) {
@@ -42,9 +44,9 @@ public class EventService {
                 .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_EVENT));
         event.addEventToProduct(request.getProductIds());
 
-        List<AddEventResponse> addEventResponses = publishAddEvent(eventId, request);
+        eventPublisher.publish(new ProductEventAddedEvent(eventId, request.getProductIds()));
 
-        return new EventResponse(event, addEventResponses);
+        return new EventResponse(event);
     }
 
     @Transactional
@@ -54,24 +56,5 @@ public class EventService {
         event.removeEventFromProduct(productId);
 
         return new EventResponse(event);
-    }
-
-    private List<AddEventResponse> publishAddEvent(Long eventId, EventAddProductRequest request) {
-        URI uri = UriComponentsBuilder
-                .fromUriString("http://localhost:8080")
-                .path("/api/product/add-event")
-                .queryParam("eventId", eventId)
-                .encode()
-                .build()
-                .toUri();
-        
-        ResponseEntity<List<AddEventResponse>> response = restTemplate.exchange(
-            uri,
-            HttpMethod.PATCH,
-            new HttpEntity<>(request),
-            new ParameterizedTypeReference<List<AddEventResponse>>() {}
-        );
-        
-        return response.getBody();
     }
 }
