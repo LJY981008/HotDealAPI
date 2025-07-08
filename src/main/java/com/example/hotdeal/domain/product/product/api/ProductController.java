@@ -14,15 +14,4 @@ import java.util.List;
 @RequestMapping("/api/product")
 @RequiredArgsConstructor
 public class ProductController {
-
-    private final ProductService productService;
-
-    @PatchMapping("/add-event")
-    public ResponseEntity<List<AddEventResponse>> addEvent(
-            @RequestParam Long eventId,
-            @RequestBody AddEventRequest request
-    ){
-        List<AddEventResponse> addEventResponses = productService.addEvent(request, eventId);
-        return ResponseEntity.status(HttpStatus.OK).body(addEventResponses);
-    }
 }
