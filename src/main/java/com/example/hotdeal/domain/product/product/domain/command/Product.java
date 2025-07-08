@@ -36,18 +36,6 @@ public class Product extends BaseEntity {
     @Column(name = "product_category", length = 50)
     private ProductCategory productCategory;
 
-    // Value Object: 상품 통계 정보
-    @Embedded
-    private ProductStatistics statistics;
-
-    // Value Object Collection: 리뷰 목록
-    @ElementCollection
-    @CollectionTable(
-            name = "product_reviews",
-            joinColumns = @JoinColumn(name = "product_id")
-    )
-    private List<Review> reviews = new ArrayList<>();
-
     // 생성자
     public Product(String productName, String productDescription, BigDecimal productPrice,
                    String productImageUrl, ProductCategory productCategory) {
@@ -56,7 +44,7 @@ public class Product extends BaseEntity {
         this.productPrice = productPrice;
         this.productImageUrl = productImageUrl;
         this.productCategory = productCategory;
-        this.statistics = new ProductStatistics(0, 0, 0);
+
     }
 
     // 상품 정보 업데이트
@@ -75,7 +63,7 @@ public class Product extends BaseEntity {
             this.productImageUrl = productImageUrl;
         }
         if (productCategory != null) {
-            this.productCategory = productCategory;
+            this.productCategory = ProductCategory.validateAndGet(productCategory);
         }
     }
 }
