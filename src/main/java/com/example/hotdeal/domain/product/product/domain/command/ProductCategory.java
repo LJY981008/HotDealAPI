@@ -1,4 +1,4 @@
-package com.example.hotdeal.domain.product.product.domain;
+package com.example.hotdeal.domain.product.product.domain.command;
 
 import lombok.Getter;
 

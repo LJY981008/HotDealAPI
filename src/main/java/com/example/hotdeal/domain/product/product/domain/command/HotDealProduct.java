@@ -1,4 +1,4 @@
-package com.example.hotdeal.domain.product.product.domain;
+package com.example.hotdeal.domain.product.product.domain.command;
 
 
 import com.example.hotdeal.global.model.BaseEntity;
@@ -12,8 +12,8 @@ import java.math.BigDecimal;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "product_discount_info")
-public class ProductDiscountInfo extends BaseEntity {
+@Table(name = "hotdeal_products")
+public class HotDealProduct extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,7 +34,7 @@ public class ProductDiscountInfo extends BaseEntity {
     private BigDecimal discountPrice; // 할인된 가격
 
     // 생성자
-    public ProductDiscountInfo(Long productId, BigDecimal originalPrice, int discountRate, BigDecimal discountPrice) {
+    public HotDealProduct(Long productId, BigDecimal originalPrice, int discountRate, BigDecimal discountPrice) {
         this.productId = productId;
         this.originalPrice = originalPrice;
         this.discountRate = discountRate;

@@ -1,5 +1,6 @@
-package com.example.hotdeal.domain.product.product.domain;
+package com.example.hotdeal.domain.product.product.domain.query;
 
+import com.example.hotdeal.domain.product.product.domain.command.ProductCategory;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
