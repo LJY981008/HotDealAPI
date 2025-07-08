@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "product_read_model", indexes = {
+@Table(name = "product_query_view", indexes = {
         @Index(name = "idx_category", columnList = "product_category"),
         @Index(name = "idx_popularity", columnList = "total_order_count, average_rating"),
         @Index(name = "idx_created_at", columnList = "created_at"),
         @Index(name = "idx_discount", columnList = "is_on_discount")
 })
-public class ProductReadModel {
+public class ProductQueryView {
 
     @Id
     @Column(name = "product_id")
@@ -68,7 +68,7 @@ public class ProductReadModel {
     private LocalDateTime updatedAt;
 
     // 생성자
-    public ProductReadModel(Long productId, String productName, String productDescription,
+    public ProductQueryView(Long productId, String productName, String productDescription,
                             BigDecimal productPrice, String productImageUrl, ProductCategory productCategory,
                             int totalOrderCount, int totalReviewCount, BigDecimal averageRating,
                             boolean isOnDiscount, Integer discountRate, BigDecimal discountPrice,
