@@ -6,9 +6,7 @@ import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
 import com.example.hotdeal.domain.event.domain.dto.EventResponse;
 import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import com.example.hotdeal.domain.event.infra.EventRepository;
-import com.example.hotdeal.domain.product.product.domain.SearchProductResponse;
-import com.example.hotdeal.global.enums.CustomErrorCode;
-import com.example.hotdeal.global.exception.CustomException;
+import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -20,9 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

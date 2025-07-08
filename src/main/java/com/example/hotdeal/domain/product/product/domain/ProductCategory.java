@@ -1,5 +1,6 @@
-package com.example.hotdeal.domain.product.product.domain.command;
+package com.example.hotdeal.domain.product.product.domain;
 
+import com.example.hotdeal.domain.product.product.exception.ProductException;
 import lombok.Getter;
 
 @Getter
@@ -24,5 +25,12 @@ public enum ProductCategory {
 
     ProductCategory(String displayName) {
         this.displayName = displayName;
+    }
+
+    public static ProductCategory validateAndGet(ProductCategory category) {
+        if (category == null) {
+            throw ProductException.invalidCategory();
+        }
+        return category;
     }
 }

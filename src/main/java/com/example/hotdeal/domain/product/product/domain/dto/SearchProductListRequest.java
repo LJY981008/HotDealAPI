@@ -1,4 +1,4 @@
-package com.example.hotdeal.domain.product.product.domain;
+package com.example.hotdeal.domain.product.product.domain.dto;
 
 import jakarta.validation.constraints.AssertTrue;
 import lombok.Getter;

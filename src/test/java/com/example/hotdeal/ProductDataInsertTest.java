@@ -1,7 +1,7 @@
 package com.example.hotdeal;
 
-import com.example.hotdeal.domain.product.product.domain.command.Product;
-import com.example.hotdeal.domain.product.product.domain.command.ProductCategory;
+import com.example.hotdeal.domain.product.product.domain.Product;
+import com.example.hotdeal.domain.product.product.domain.ProductCategory;
 import com.example.hotdeal.domain.product.product.infra.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

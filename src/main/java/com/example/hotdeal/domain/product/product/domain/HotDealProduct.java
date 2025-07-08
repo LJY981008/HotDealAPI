@@ -1,4 +1,4 @@
-package com.example.hotdeal.domain.product.product.domain.command;
+package com.example.hotdeal.domain.product.product.domain;
 
 
 import com.example.hotdeal.global.model.BaseEntity;

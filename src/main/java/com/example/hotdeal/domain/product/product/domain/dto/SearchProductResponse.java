@@ -1,8 +1,7 @@
-package com.example.hotdeal.domain.product.product.domain;
+package com.example.hotdeal.domain.product.product.domain.dto;
 
-import com.example.hotdeal.domain.event.domain.entity.EventItem;
-import com.example.hotdeal.domain.product.product.domain.command.Product;
-import com.example.hotdeal.domain.product.product.domain.command.ProductCategory;
+import com.example.hotdeal.domain.product.product.domain.Product;
+import com.example.hotdeal.domain.product.product.domain.ProductCategory;
 import lombok.Getter;
 
 import java.math.BigDecimal;
