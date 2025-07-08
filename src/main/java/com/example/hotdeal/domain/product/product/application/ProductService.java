@@ -1,6 +1,5 @@
 package com.example.hotdeal.domain.product.product.application;
 
-import com.example.hotdeal.domain.product.product.domain.AddEventRequest;
 import com.example.hotdeal.domain.product.product.domain.AddEventResponse;
 import com.example.hotdeal.domain.product.product.infra.ProductRepository;
 import com.example.hotdeal.global.enums.CustomErrorCode;

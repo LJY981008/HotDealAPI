@@ -2,7 +2,6 @@ package com.example.hotdeal.global.event.impl;
 
 import com.example.hotdeal.global.event.model.DomainEvent;
 import com.example.hotdeal.global.event.model.EventPublisher;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 

@@ -3,7 +3,6 @@ package com.example.hotdeal.domain.product.product.domain;
 import com.example.hotdeal.global.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Getter
