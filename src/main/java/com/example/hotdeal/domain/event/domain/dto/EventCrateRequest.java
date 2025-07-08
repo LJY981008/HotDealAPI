@@ -6,19 +6,31 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
+/**
+ * 이벤트 생성 DTO
+ */
 @Getter
 public class EventCrateRequest {
 
     @NotNull
     private EventType eventType;
     @NotNull
-    private int eventDiscount;
+    private BigDecimal eventDiscount;
     @NotNull
     private int eventDuration;
     @NotNull
     private LocalDateTime startEventTime;
+
+    private List<Long> productIds;
+
+    @AssertTrue
+    private boolean isProductIdsValid() {
+        return !productIds.isEmpty();
+    }
 
     @AssertTrue(message = "이벤트 종료 시간은 현재 시간보다 이후여야 합니다")
     private boolean isEndTimeValid() {
