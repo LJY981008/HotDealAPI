@@ -32,7 +32,7 @@ public class EventService {
     public EventResponse addEventToProduct(Long eventId, EventAddProductRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_EVENT));
-        event.addEventToProduct(request.getProductIds());
+
 
         eventPublisher.publish(new ProductEventAddedEvent(eventId, request.getProductIds()));
 
@@ -43,7 +43,6 @@ public class EventService {
     public EventResponse removeEventFromProduct(Long eventId, Long productId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_EVENT));
-        event.removeEventFromProduct(productId);
 
         return new EventResponse(event);
     }

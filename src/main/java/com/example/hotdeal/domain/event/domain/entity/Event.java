@@ -1,14 +1,13 @@
 package com.example.hotdeal.domain.event.domain.entity;
 
 import com.example.hotdeal.domain.event.enums.EventType;
+import com.example.hotdeal.domain.product.product.domain.command.Product;
 import com.example.hotdeal.global.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -18,9 +17,9 @@ public class Event extends BaseEntity {
     @Column(name = "event_id")
     private Long eventId;
 
-    @ElementCollection
-    @Column(name = "product_ids")
-    private Set<Long> productIds = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Product> products;
 
     @Column(name = "event_type")
     private EventType eventType;
@@ -41,13 +40,5 @@ public class Event extends BaseEntity {
         this.eventDiscount = eventDiscount;
         this.eventDuration = eventDuration;
         this.startEventTime = startEventTime;
-    }
-
-    public void addEventToProduct(List<Long> productIds) {
-        this.productIds.addAll(productIds);
-    }
-
-    public void removeEventFromProduct(Long productId) {
-        this.productIds.remove(productId);
     }
 }

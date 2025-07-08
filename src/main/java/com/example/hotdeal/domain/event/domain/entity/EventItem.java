@@ -1,0 +1,28 @@
+package com.example.hotdeal.domain.event.domain.entity;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+
+import java.math.BigDecimal;
+
+@Entity
+@Getter
+@Table(name = "event_item") // 자식 테이블
+public class EventItem {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "item_id")
+    private Long itemId;
+
+    @Column(name = "product_id")
+    private Long productId;
+    @Column(name = "product_name")
+    private String productName;
+    @Column(name = "original_price")
+    private BigDecimal originalPrice;
+    @Column(name = "discount_price")
+    private BigDecimal discountPrice;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "products")
+    private Event event;
+}
