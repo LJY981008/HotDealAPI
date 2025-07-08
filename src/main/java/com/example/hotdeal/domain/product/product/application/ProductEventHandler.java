@@ -18,14 +18,14 @@ public class ProductEventHandler {
     @Async
     public void handleProductEventAdded(ProductEventAddedEvent event) {
         try {
-            log.info("Processing ProductEventAddedEvent: eventId={}, productIds={}",
+            log.info("이벤트 호출: eventId={}, productIds={}",
                     event.getEventId(), event.getProductIds());
 
             productService.addEvent(event.getProductIds(), event.getEventId());
 
-            log.info("Successfully processed ProductEventAddedEvent");
+            log.info("이벤트 처리 성공");
         } catch (Exception e) {
-            log.error("Failed to process ProductEventAddedEvent", e);
+            log.error("이벤트 처리 실패", e);
         }
     }
 }

@@ -18,11 +18,11 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     @Transactional
-    public List<AddEventResponse> addEvent(AddEventRequest request, Long eventId) {
-        long updatedCount = productRepository.updateProductEventIds(request.getProductIds(), eventId);
+    public List<AddEventResponse> addEvent(List<Long> productIds, Long eventId) {
+        long updatedCount = productRepository.updateProductEventIds(productIds, eventId);
         if (updatedCount <= 0) {
             throw new CustomException(CustomErrorCode.NOT_FOUND_PRODUCT);
         }
-        return productRepository.findProductsByIds(request.getProductIds());
+        return productRepository.findProductsByIds(productIds);
     }
 }
