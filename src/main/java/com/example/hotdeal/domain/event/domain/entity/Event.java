@@ -5,7 +5,10 @@ import com.example.hotdeal.domain.product.product.domain.command.Product;
 import com.example.hotdeal.global.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
+import javax.print.attribute.standard.MediaSize;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,15 +20,16 @@ public class Event extends BaseEntity {
     @Column(name = "event_id")
     private Long eventId;
 
-
+    @Setter
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<Product> products;
+    @Column(name = "product_ids")
+    private List<EventItem> products;
 
     @Column(name = "event_type")
     private EventType eventType;
 
     @Column(name = "event_discount")
-    private int eventDiscount;
+    private BigDecimal eventDiscount;
 
     @Column(name = "event_duration")
     private int eventDuration;
@@ -35,10 +39,11 @@ public class Event extends BaseEntity {
 
     public Event() {}
 
-    public Event(EventType eventType, int eventDiscount, int eventDuration, LocalDateTime startEventTime) {
+    public Event(EventType eventType, BigDecimal eventDiscount, int eventDuration, LocalDateTime startEventTime) {
         this.eventType = eventType;
         this.eventDiscount = eventDiscount;
         this.eventDuration = eventDuration;
         this.startEventTime = startEventTime;
     }
+
 }

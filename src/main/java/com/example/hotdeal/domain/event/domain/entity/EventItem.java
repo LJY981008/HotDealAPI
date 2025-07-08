@@ -1,5 +1,6 @@
 package com.example.hotdeal.domain.event.domain.entity;
 
+import com.example.hotdeal.domain.product.product.domain.SearchProductResponse;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -23,6 +24,18 @@ public class EventItem {
     private BigDecimal discountPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "products")
+    @JoinColumn(name = "product_ids")
     private Event event;
+
+    public EventItem(SearchProductResponse response, BigDecimal discount) {
+        this.productId = response.getProductId();
+        this.productName = response.getProductName();
+        this.originalPrice = response.getOriginalPrice();
+        BigDecimal finalRate = BigDecimal.ONE.subtract(discount.divide(new BigDecimal("100")));
+        this.discountPrice = this.originalPrice.multiply(finalRate);
+    }
+
+    public EventItem() {
+
+    }
 }

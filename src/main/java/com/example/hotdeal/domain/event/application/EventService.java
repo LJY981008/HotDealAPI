@@ -1,49 +1,74 @@
 package com.example.hotdeal.domain.event.application;
 
-import com.example.hotdeal.domain.event.domain.ProductEventAddedEvent;
 import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.domain.dto.EventAddProductRequest;
 import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
 import com.example.hotdeal.domain.event.domain.dto.EventResponse;
+import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import com.example.hotdeal.domain.event.infra.EventRepository;
+import com.example.hotdeal.domain.product.product.domain.SearchProductResponse;
 import com.example.hotdeal.global.enums.CustomErrorCode;
-import com.example.hotdeal.global.event.model.EventPublisher;
 import com.example.hotdeal.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class EventService {
 
     private final EventRepository eventRepository;
-    private final EventPublisher eventPublisher;
+    private final RestTemplate restTemplate;
 
+    /**
+     * 이벤트 생성
+     *
+     * @param request 요청값
+     */
     @Transactional
     public EventResponse createEvent(EventCrateRequest request) {
-        Event event = request.toEvent();
-        Event savedEvent = eventRepository.save(event);
-
-        return new EventResponse(savedEvent);
-    }
-
-    @Transactional
-    public EventResponse addEventToProduct(Long eventId, EventAddProductRequest request) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_EVENT));
-
-
-        eventPublisher.publish(new ProductEventAddedEvent(eventId, request.getProductIds()));
+        Event event = eventRepository.save(request.toEvent());
+        List<SearchProductResponse> searchProductResponses = productSearch(request.getProductIds());
+        List<EventItem> eventItems = searchProductResponses.stream().map(response -> new EventItem(response, event.getEventDiscount()))
+                .toList();
+        event.setProducts(eventItems);
 
         return new EventResponse(event);
     }
 
-    @Transactional
-    public EventResponse removeEventFromProduct(Long eventId, Long productId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_EVENT));
+    /**
+     * 레스트 템플릿 호출
+     *
+     * @param productIds
+     * @return
+     */
+    private List<SearchProductResponse> productSearch(List<Long> productIds) {
+        EventAddProductRequest eventAddProductRequest = new EventAddProductRequest(productIds);
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost:8080")
+                .path("/api/product/search-product")
+                .encode()
+                .build()
+                .toUri();
 
-        return new EventResponse(event);
+        ResponseEntity<List<SearchProductResponse>> response = restTemplate.exchange(
+                uri,
+                HttpMethod.GET,
+                new HttpEntity<>(eventAddProductRequest),
+                new ParameterizedTypeReference<List<SearchProductResponse>>() {}
+        );
+
+        return response.getBody();
     }
 }
