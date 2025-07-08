@@ -1,4 +1,4 @@
-package com.example.hotdeal.domain.event.domain;
+package com.example.hotdeal.domain.event.domain.entity;
 
 import com.example.hotdeal.domain.event.enums.EventType;
 import com.example.hotdeal.global.model.BaseEntity;

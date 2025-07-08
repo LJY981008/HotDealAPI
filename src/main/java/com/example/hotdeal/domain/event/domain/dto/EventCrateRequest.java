@@ -1,11 +1,10 @@
-package com.example.hotdeal.domain.event.domain;
+package com.example.hotdeal.domain.event.domain.dto;
 
+import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.enums.EventType;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 

@@ -1,4 +1,4 @@
-package com.example.hotdeal.domain.event.domain;
+package com.example.hotdeal.domain.event.domain.dto;
 
 import jakarta.validation.constraints.AssertTrue;
 import lombok.Getter;
