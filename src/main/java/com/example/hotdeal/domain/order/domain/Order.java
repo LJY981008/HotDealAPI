@@ -4,7 +4,10 @@ import com.example.hotdeal.domain.order.enums.OrderStatus;
 import com.example.hotdeal.global.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,22 +17,35 @@ import java.util.List;
 @Table(name = "orders")
 public class Order extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id")
-    private Long order_id;
+    private Long orderId;
 
-    private Long user_id;
+    private Long userId;
 
-    private int order_total_price;
+    private BigDecimal order_total_price;
+
+    @Column(name = "order_item_ids", columnDefinition = "json")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
     private OrderStatus orderStatus;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> items = new ArrayList<>();
+    @Column(name = "order_time")
+    private LocalDateTime orderTime;
 
-    @Column(name = "ordering_time")
-    private LocalDateTime order_time;
+    public Order() {}
+    public void addOrderItem(OrderItem orderItem) {
+        this.orderItems.add(orderItem);
+        orderItem.setOrder(this);
+    }
 
+    public Order(Long userId,
+                 BigDecimal order_total_price) {
+        this.userId = userId;
+        this.order_total_price = order_total_price;
+    }
 }
