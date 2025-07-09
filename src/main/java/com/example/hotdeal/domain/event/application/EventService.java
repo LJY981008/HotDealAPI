@@ -1,5 +1,6 @@
 package com.example.hotdeal.domain.event.application;
 
+import com.example.hotdeal.domain.event.domain.dto.WSEventProduct;
 import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.domain.dto.EventAddProductRequest;
 import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
@@ -8,6 +9,7 @@ import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import com.example.hotdeal.domain.event.infra.EventRepository;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -19,12 +21,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final RestTemplate restTemplate;
 
     /**
@@ -39,6 +43,19 @@ public class EventService {
         List<EventItem> eventItems = searchProductResponses.stream().map(response -> new EventItem(response, event.getEventDiscount()))
                 .toList();
         event.setProducts(eventItems);
+
+        List<WSEventProduct> wsEventProduct = eventItems.stream()
+                .map(eventItem ->
+                        new WSEventProduct(
+                                eventItem.getEvent().getEventType(),
+                                eventItem.getProductName(),
+                                eventItem.getOriginalPrice(),
+                                eventItem.getDiscountPrice(),
+                                eventItem.getEvent().getEventDiscount()
+                        )
+                )
+                .toList();
+        eventPublisher.publishEvent(wsEventProduct);
 
         return new EventResponse(event);
     }
