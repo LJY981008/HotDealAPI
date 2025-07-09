@@ -47,6 +47,8 @@ public class EventService {
         List<WSEventProduct> wsEventProduct = eventItems.stream()
                 .map(eventItem ->
                         new WSEventProduct(
+                                eventItem.getEvent().getEventId(),
+                                eventItem.getProductId(),
                                 eventItem.getEvent().getEventType(),
                                 eventItem.getProductName(),
                                 eventItem.getOriginalPrice(),
