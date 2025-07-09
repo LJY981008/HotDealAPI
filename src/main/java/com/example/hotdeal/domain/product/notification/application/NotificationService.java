@@ -24,14 +24,25 @@ public class NotificationService {
 
     //TODO 구독 경로에 productID를 추가해 해당 프로덕트를 구독한 유저를 분류해도 될듯?
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void notifyProductEventMessage(List<ListenProductEvent> listenProductEvents) {
+    public void notifyProductEventMessage(ListenProductEvent listenProductEvent) {
         try {
-            List<Notification> notifications = listenProductEvents.stream().map(ListenProductEvent::toNotification).toList();
-            notificationRepository.saveAll(notifications);
-            List<String> notificationMessages = notifications.stream().map(Notification::getNotification_message).toList();
-            messagingTemplate.convertAndSend("/topic/notifications", notificationMessages);
+            log.info("NotificationService.notifyProductEventMessage 시작");
+            
+            Notification notification = listenProductEvent.toNotification();
+            notificationRepository.save(notification);
+            String notificationMessages = notification.getNotification_message();
+            
+            log.info("웹소켓 메시지 전송 시작: {}", notificationMessages);
+            try {
+                messagingTemplate.convertAndSend("/topic/notification", notificationMessages);
+                log.info("웹소켓 메시지 전송 완료");
+            } catch (Exception wsException) {
+                log.error("웹소켓 메시지 전송 실패: {}", wsException.getMessage(), wsException);
+                throw wsException;
+            }
+            
         } catch (Exception e) {
-            log.error("notifyProductEventMessage 에러 message {}", e.getMessage());
+            log.error("notifyProductEventMessage 에러 message {}", e.getMessage(), e);
         }
 
     }
