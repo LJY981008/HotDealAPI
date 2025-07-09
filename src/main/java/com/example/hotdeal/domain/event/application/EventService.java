@@ -15,14 +15,15 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -68,6 +69,14 @@ public class EventService {
         log.info("이벤트 발행 완료");
 
         return new EventResponse(event);
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void removeLastEvent(){
+        LocalDateTime now = LocalDateTime.now();
+        int deletedCount = eventRepository.softDeleteExpiredEvents(now);
+        log.info("기한이 지난 이벤트 삭제 총 {}개", deletedCount);
     }
 
     /**
