@@ -14,4 +14,14 @@ public class Notification extends BaseEntity {
     private Long product_id;
     private Long event_id;
     private String notification_message;
+
+    public Notification(Long product_id, Long event_id, String notification_message) {
+        this.product_id = product_id;
+        this.event_id = event_id;
+        this.notification_message = notification_message;
+    }
+
+    public Notification() {
+
+    }
 }
