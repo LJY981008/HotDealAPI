@@ -5,6 +5,7 @@ import com.example.hotdeal.domain.product.notification.domain.ListenProductEvent
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class NotificationListener {
 
     private final NotificationService notificationService;
 
+    @Async
     @EventListener
     public void addProductDiscountEvent(List<WSEventProduct> events){
         try {
