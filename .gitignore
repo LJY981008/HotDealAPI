@@ -39,3 +39,5 @@ out/
 ### properties ###
 *.properties
 *.env
+
+locust_env/
