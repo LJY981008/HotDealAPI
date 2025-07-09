@@ -4,9 +4,6 @@ import com.example.hotdeal.domain.order.enums.OrderStatus;
 import com.example.hotdeal.global.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

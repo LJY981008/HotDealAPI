@@ -8,6 +8,7 @@ public enum CustomErrorCode {
     ROLE_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "유효하지 않은 UserRole"),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
     NOT_FOUND_EVENT(HttpStatus.NOT_FOUND, "진행중인 이벤트가 아닙니다."),
+    NOT_FOUND_ORDER(HttpStatus.NOT_FOUND, "주문목록이 없습니다."),
     NOT_FOUND_PRODUCT(HttpStatus.NOT_FOUND, "제품이 없습니다."),
     ;
 

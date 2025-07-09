@@ -1,15 +1,11 @@
 package com.example.hotdeal.domain.order.application.dto;
 
-import com.example.hotdeal.domain.order.domain.OrderItem;
-import com.example.hotdeal.domain.order.enums.OrderStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
+import com.example.hotdeal.domain.order.enums.OrderStatus;
+import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
+
 
 
 @Getter
