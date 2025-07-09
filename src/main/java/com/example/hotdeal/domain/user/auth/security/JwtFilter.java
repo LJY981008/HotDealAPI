@@ -1,6 +1,5 @@
 package com.example.hotdeal.domain.user.auth.security;
 
-
 import com.example.hotdeal.domain.user.auth.domain.AuthUserDto;
 import com.example.hotdeal.global.enums.UserRole;
 import io.jsonwebtoken.Claims;

@@ -1,9 +1,12 @@
 package com.example.hotdeal.domain.user.auth.api;
 
 import com.example.hotdeal.domain.user.auth.application.AuthService;
-import com.example.hotdeal.domain.user.auth.domain.SigninRequest;
-import com.example.hotdeal.domain.user.auth.domain.SignupRequest;
-import com.example.hotdeal.domain.user.auth.domain.UserResponse;
+import com.example.hotdeal.domain.user.auth.domain.response.AccessTokenResponse;
+import com.example.hotdeal.domain.user.auth.domain.request.ReissueRequest;
+import com.example.hotdeal.domain.user.auth.domain.request.SigninRequest;
+import com.example.hotdeal.domain.user.auth.domain.request.SignupRequest;
+import com.example.hotdeal.domain.user.auth.domain.response.TokenResponse;
+import com.example.hotdeal.domain.user.auth.domain.response.CreateUserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,18 +23,26 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<UserResponse> signup(
+    public ResponseEntity<CreateUserResponse> signup(
             @RequestBody SignupRequest signupRequest
     ) {
-        UserResponse signup = authService.signup(signupRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(signup);
+        CreateUserResponse response = authService.signup(signupRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(
+    public ResponseEntity<TokenResponse> login(
             @RequestBody SigninRequest signinRequest
     ) {
-        UserResponse signin = authService.signin(signinRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(signin);
+        return ResponseEntity.status(HttpStatus.OK).body(authService.signin(signinRequest));
     }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<AccessTokenResponse> reissue(
+        @RequestBody ReissueRequest request
+    ) {
+        AccessTokenResponse accessToken = authService.reissueAccessToken(request);
+        return ResponseEntity.status(HttpStatus.OK).body(accessToken);
+    }
+
 }
