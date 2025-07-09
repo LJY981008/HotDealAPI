@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+    ========================================
+    WebSocket 실시간 알림 테스트 페이지
+    ========================================
+    
+    📋 테스트 방법:
+    
+    1. 터미널에서 웹 서버 실행:
+       cd ../HotDeal 프로젝트 경로
+       python3 -m http.server 3000
+       
+    2. 브라우저에서 페이지 열기:
+       http://localhost:3000/websocket-test.html
+       
+    3. Spring Boot 애플리케이션 실행 확인 (8080 포트)
+       
+    4. 이벤트 생성 API 호출:
+       POST http://localhost:8080/api/event/create
+       Content-Type: application/json
+       
+       {
+         "eventType": "HOT_DEAL",
+         "eventDiscount": 20,
+         "eventDuration": 7,
+         "startEventTime": "2025-01-15T00:00:00",
+         "productIds": [1, 2, 3]
+       }
+       
+    5. 브라우저에서 실시간 알림 확인
+       
+    6. 테스트 완료 후 웹 서버 종료:
+       터미널에서 Ctrl+C 또는
+       lsof -ti:3000 | xargs kill -9
+       
+    ========================================
+-->
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+    <h1>WebSocket 알림 테스트</h1>
+    <div id="messages"></div>
+    
+    <script>
+        const socket = new SockJS('http://localhost:8080/ws');
+        const stompClient = Stomp.over(socket);
+        
+        stompClient.connect({}, function(frame) {
+            console.log('Connected: ' + frame);
+            document.getElementById('messages').innerHTML += '<p>✅ 웹소켓 연결 성공</p>';
+            
+            stompClient.subscribe('/topic/notification', function(message) {
+                console.log('알림 받음:', message.body);
+                document.getElementById('messages').innerHTML += '<p>🔔 알림: ' + message.body + '</p>';
+            });
+        }, function(error) {
+            console.log('STOMP error: ' + error);
+            document.getElementById('messages').innerHTML += '<p>❌ 연결 실패: ' + error + '</p>';
+        });
+        
+        // 연결 상태 모니터링
+        window.addEventListener('beforeunload', function() {
+            if (stompClient.connected) {
+                stompClient.disconnect();
+            }
+        });
+    </script>
+</body>
+</html> 
