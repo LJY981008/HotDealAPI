@@ -87,7 +87,7 @@ public class EventService {
 
         ResponseEntity<List<SearchProductResponse>> response = restTemplate.exchange(
                 uri,
-                HttpMethod.GET,
+                HttpMethod.POST,
                 new HttpEntity<>(eventAddProductRequest),
                 new ParameterizedTypeReference<List<SearchProductResponse>>() {}
         );

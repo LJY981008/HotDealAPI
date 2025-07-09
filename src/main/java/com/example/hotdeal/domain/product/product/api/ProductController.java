@@ -26,7 +26,7 @@ public class ProductController {
     private final ProductService productService;
 
     // 이벤트용 상품 다건 조회 API
-    @GetMapping("/search-product")
+    @PostMapping("/search-product")
     public ResponseEntity<List<SearchProductResponse>> searchProducts(
             @Valid @RequestBody SearchProductListRequest request
     ) {
