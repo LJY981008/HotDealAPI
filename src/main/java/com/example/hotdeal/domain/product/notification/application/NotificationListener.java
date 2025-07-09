@@ -19,14 +19,12 @@ public class NotificationListener {
 
     @Async
     @EventListener
-    public void addProductDiscountEvent(List<WSEventProduct> events){
+    public void addProductDiscountEvent(WSEventProduct event){
         try {
-            log.info("addProductDiscountEvent 시작");
+            log.info("addProductDiscountEvent 시작 - 단일 이벤트: {}", event.product_id());
 
-            List<ListenProductEvent> listenProductEvents =
-                    events.stream().map(ListenProductEvent::new).toList();
-
-            notificationService.notifyProductEventMessage(listenProductEvents);
+            ListenProductEvent listenProductEvent = new ListenProductEvent(event);
+            notificationService.notifyProductEventMessage(listenProductEvent);
 
             log.info("addProductDiscountEvent 종료");
         } catch (Exception e) {

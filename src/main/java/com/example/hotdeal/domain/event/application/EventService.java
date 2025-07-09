@@ -9,6 +9,7 @@ import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import com.example.hotdeal.domain.event.infra.EventRepository;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -23,6 +24,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EventService {
@@ -44,20 +46,26 @@ public class EventService {
                 .toList();
         event.setProducts(eventItems);
 
-        List<WSEventProduct> wsEventProduct = eventItems.stream()
+        List<WSEventProduct> wsEventProducts = eventItems.stream()
                 .map(eventItem ->
                         new WSEventProduct(
-                                eventItem.getEvent().getEventId(),
+                                event.getEventId(),
                                 eventItem.getProductId(),
-                                eventItem.getEvent().getEventType(),
+                                event.getEventType(),
                                 eventItem.getProductName(),
                                 eventItem.getOriginalPrice(),
                                 eventItem.getDiscountPrice(),
-                                eventItem.getEvent().getEventDiscount()
+                                event.getEventDiscount()
                         )
                 )
                 .toList();
-        eventPublisher.publishEvent(wsEventProduct);
+
+        log.info("이벤트 발행 시작 - 총 {}개 이벤트", wsEventProducts.size());
+        wsEventProducts.forEach(wsEvent -> {
+            log.info("이벤트 발행: {}", wsEvent.product_id());
+            eventPublisher.publishEvent(wsEvent);
+        });
+        log.info("이벤트 발행 완료");
 
         return new EventResponse(event);
     }
@@ -72,7 +80,7 @@ public class EventService {
         EventAddProductRequest eventAddProductRequest = new EventAddProductRequest(productIds);
         URI uri = UriComponentsBuilder
                 .fromUriString("http://localhost:8080")
-                .path("/api/product/search-product")
+                .path("/api/products/search-product")
                 .encode()
                 .build()
                 .toUri();
