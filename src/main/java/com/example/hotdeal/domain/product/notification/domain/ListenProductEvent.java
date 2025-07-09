@@ -8,20 +8,20 @@ import java.text.DecimalFormat;
 
 @Getter
 public class ListenProductEvent {
-    private final Long product_id;
-    private final Long event_id;
-    private final String notification_message;
+    private final Long productId;
+    private final Long eventIds;
+    private final String notificationMessage;
 
     public ListenProductEvent(WSEventProduct event) {
-        this.product_id = event.product_id();
-        this.event_id = event.event_id();
+        this.productId = event.product_id();
+        this.eventIds = event.event_id();
 
         DecimalFormat priceFormatter = new DecimalFormat("###,###");
         DecimalFormat discountFormatter = new DecimalFormat("0.##");
 
         BigDecimal discountPercent = event.discount().multiply(new BigDecimal("100"));
 
-        this.notification_message =
+        this.notificationMessage =
                 String.format(
                     "🔥 핫딜 등장! '%s' 지금 바로 %s원! (%s%% 할인)",
                     event.productName(),
@@ -31,6 +31,6 @@ public class ListenProductEvent {
     }
 
     public Notification toNotification() {
-        return new Notification(this.product_id, this.event_id, this.notification_message);
+        return new Notification(this.productId, this.eventIds, this.notificationMessage);
     }
 }
