@@ -3,6 +3,9 @@ import json
 import random
 import time
 
+# 실행과정
+# brew install python3
+# brew install locust
 # cd /Users/ljy/IdeaProjects/test/HotDeal // 터미널을 통해 이 파일이 있는 경로로 이동
 # python3 -m locust -f locustfile.py --host=http://localhost:8080 // 이 파일 실행
 # localhost:8089 로 접속
