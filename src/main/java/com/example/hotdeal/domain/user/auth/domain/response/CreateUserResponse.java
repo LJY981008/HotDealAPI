@@ -1,4 +1,4 @@
-package com.example.hotdeal.domain.user.auth.domain;
+package com.example.hotdeal.domain.user.auth.domain.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

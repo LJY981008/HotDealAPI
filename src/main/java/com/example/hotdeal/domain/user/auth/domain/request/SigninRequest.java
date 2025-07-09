@@ -1,4 +1,4 @@
-package com.example.hotdeal.domain.user.auth.domain;
+package com.example.hotdeal.domain.user.auth.domain.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
