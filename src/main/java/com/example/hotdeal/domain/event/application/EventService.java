@@ -7,6 +7,7 @@ import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
 import com.example.hotdeal.domain.event.domain.dto.EventResponse;
 import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import com.example.hotdeal.domain.event.infra.EventRepository;
+import com.example.hotdeal.domain.product.product.domain.dto.SearchProductListRequest;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,7 @@ public class EventService {
     public EventResponse createEvent(EventCrateRequest request) {
         Event event = eventRepository.save(request.toEvent());
         List<SearchProductResponse> searchProductResponses = productSearch(request.getProductIds());
-        List<EventItem> eventItems = searchProductResponses.stream().map(response -> new EventItem(response, event.getEventDiscount()))
+        List<EventItem> eventItems = searchProductResponses.stream().map(response -> new EventItem(response, event.getEventDiscount(), event))
                 .toList();
         event.setProducts(eventItems);
 
@@ -86,7 +87,7 @@ public class EventService {
      * @return
      */
     private List<SearchProductResponse> productSearch(List<Long> productIds) {
-        EventAddProductRequest eventAddProductRequest = new EventAddProductRequest(productIds);
+        SearchProductListRequest request = new SearchProductListRequest(productIds);
         URI uri = UriComponentsBuilder
                 .fromUriString("http://localhost:8080")
                 .path("/api/products/search-product")
@@ -97,7 +98,7 @@ public class EventService {
         ResponseEntity<List<SearchProductResponse>> response = restTemplate.exchange(
                 uri,
                 HttpMethod.POST,
-                new HttpEntity<>(eventAddProductRequest),
+                new HttpEntity<>(request),
                 new ParameterizedTypeReference<List<SearchProductResponse>>() {}
         );
 

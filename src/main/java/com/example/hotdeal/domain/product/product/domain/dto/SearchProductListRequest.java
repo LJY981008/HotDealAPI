@@ -17,4 +17,8 @@ public class SearchProductListRequest {
     private boolean isValidList() {
         return !productIds.isEmpty();
     }
+
+    public SearchProductListRequest(List<Long> productIds) {
+        this.productIds = productIds;
+    }
 }
