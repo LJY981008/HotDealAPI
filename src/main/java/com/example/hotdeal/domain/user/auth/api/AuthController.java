@@ -18,10 +18,12 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -53,7 +55,7 @@ public class AuthController {
 		@Valid @RequestBody ReissueRequest request
 	) {
 		AccessTokenResponse accessToken = authService.reissueAccessToken(request);
-		return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.of(accessToken, "엑세스 토큰이 재발급되었습니다."));
+		return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.of(accessToken, "엑세스토큰이 재발급되었습니다."));
 	}
 
 	@PostMapping("/logout")
@@ -80,6 +82,16 @@ public class AuthController {
 
 		authService.deactivateUser(accessToken, request);
 		return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.of(null, "정상적으로 탈퇴되었습니다."));
+	}
+
+	//어드민 전용 유저 복구 API
+	@PostMapping("/{authId}/restore")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<AuthResponse<Void>> restore(
+		@RequestParam Long authId
+	) {
+		authService.restoreDeleteUser(authId);
+		return ResponseEntity.status(HttpStatus.OK).body(null);
 	}
 
 }

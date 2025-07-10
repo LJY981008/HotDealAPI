@@ -9,6 +9,9 @@ import com.example.hotdeal.domain.user.auth.domain.response.AccessTokenResponse;
 import com.example.hotdeal.domain.user.auth.domain.Auth;
 import com.example.hotdeal.domain.user.auth.domain.request.ReissueRequest;
 import com.example.hotdeal.domain.user.auth.domain.response.TokenResponse;
+import com.example.hotdeal.domain.user.auth.event.UserRegisteredEvent;
+import com.example.hotdeal.domain.user.auth.event.UserRestoredEvent;
+import com.example.hotdeal.domain.user.auth.event.UserWithdrawnEvent;
 import com.example.hotdeal.domain.user.auth.infra.RefreshTokenRepository;
 import com.example.hotdeal.domain.user.auth.infra.TokenBlacklistRepository;
 import com.example.hotdeal.domain.user.auth.security.JwtUtil;
@@ -22,6 +25,7 @@ import com.example.hotdeal.global.exception.CustomException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,11 +40,18 @@ public class AuthService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final TokenBlacklistRepository tokenBlacklistRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final ApplicationEventPublisher eventPublisher;
 
 	public CreateUserResponse signup(SignupRequest request) {
 		String encodedPassword = passwordEncoder.encode(request.getPassword());
-		Auth auth = Auth.of(request.getEmail(), request.getName(), encodedPassword);
+		Auth auth = Auth.createAuth(request.getEmail(), request.getName(), encodedPassword);
 		Auth savedAuth = authRepository.save(auth);
+
+		//회원가입 이벤트 발행
+		eventPublisher.publishEvent(
+			UserRegisteredEvent.of(savedAuth.getAuthId(), savedAuth.getEmail(),
+			savedAuth.getName(), savedAuth.getCreatedAt())
+		);
 
 		return CreateUserResponse.of(savedAuth.getAuthId(), savedAuth.getEmail(), savedAuth.getName());
 	}
@@ -122,10 +133,29 @@ public class AuthService {
 		}
 
 		foundAuth.softDelete();
+
+		//탈퇴 이벤트 발행
+		eventPublisher.publishEvent(UserWithdrawnEvent.of(foundAuth.getAuthId()));
+	}
+
+	public void restoreDeleteUser(Long authId) {
+		//복구할 id 값의 유저 조회
+		Auth foundAuth = authRepository.findByAuthIdAndDeletedTrue(authId)
+			.orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_USER, "데이터를 복구할 유저가 없습니다."));
+
+		//update 문 실시 delete = true -> delete = false
+		authRepository.restoredByAuthId(authId);
+
+		//복구 이벤트 발행
+		eventPublisher.publishEvent(
+			UserRestoredEvent.of(foundAuth.getAuthId(), foundAuth.getEmail(),
+			foundAuth.getName(), foundAuth.getCreatedAt())
+		);
 	}
 
 	//이하 헬퍼 메서드
 	public Auth getAuthOrThrow(Optional<Auth> auth) {
 		return auth.orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_USER));
 	}
+
 }
