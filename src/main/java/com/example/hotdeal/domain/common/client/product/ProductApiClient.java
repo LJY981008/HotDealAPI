@@ -31,41 +31,4 @@ public class ProductApiClient {
         String url = PRODUCT_API_BASE_URL + "/" + productId;
         return restTemplate.getForObject(url, SearchProductResponse.class);
     }
-
-    /**
-     * 상품 다건 조회
-     */
-    public List<SearchProductResponse> getProducts(List<Long> productIds) {
-        log.debug("상품 다건 조회: productIds={}", productIds);
-
-        ProductSearchRequest request = new ProductSearchRequest(productIds);
-        URI uri = UriComponentsBuilder
-                .fromUriString(PRODUCT_API_BASE_URL)
-                .path("/search-product")
-                .encode()
-                .build()
-                .toUri();
-
-        ResponseEntity<List<SearchProductResponse>> response = restTemplate.exchange(
-                uri,
-                HttpMethod.POST,
-                new HttpEntity<>(request),
-                new ParameterizedTypeReference<List<SearchProductResponse>>() {}
-        );
-
-        return response.getBody();
-    }
-
-    // 내부 요청 DTO
-    private static class ProductSearchRequest {
-        private final List<Long> productIds;
-
-        public ProductSearchRequest(List<Long> productIds) {
-            this.productIds = productIds;
-        }
-
-        public List<Long> getProductIds() {
-            return productIds;
-        }
-    }
 }

@@ -1,30 +1,23 @@
 package com.example.hotdeal.domain.order.application.Service;
 
+import com.example.hotdeal.domain.common.client.product.HotDealApiClient;
 import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
-import com.example.hotdeal.domain.event.domain.dto.SearchEventToProductIdRequest;
 import com.example.hotdeal.domain.order.application.dto.*;
 import com.example.hotdeal.domain.order.domain.Order;
 import com.example.hotdeal.domain.order.domain.OrderItem;
 import com.example.hotdeal.domain.order.enums.OrderStatus;
 import com.example.hotdeal.domain.order.infra.OrderRepository;
 import com.example.hotdeal.domain.product.product.domain.Product;
-import com.example.hotdeal.domain.product.product.domain.dto.SearchProductListRequest;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import com.example.hotdeal.domain.product.product.infra.ProductRepositoryImpl;
 import com.example.hotdeal.global.enums.CustomErrorCode;
 import com.example.hotdeal.global.exception.CustomException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +29,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepositoryImpl productRepositoryImpl;
+    private final HotDealApiClient apiClient;
 
     /*
     * 기존에 하던 Product에 연관관계 맺어서 가져오는 방법
@@ -92,7 +86,7 @@ public class OrderService {
             counts.add(item.getQuantity());
         }
 
-        List<SearchProductResponse> searchProductResponses = productSearch(productIds);
+        List<SearchProductResponse> searchProductResponses = apiClient.getProducts(productIds);
         List<OrderItemDto> product = searchProductResponses.stream().map(response -> new OrderItemDto(response.getProductId(),
                         response.getProductName(),
                         response.getOriginalPrice()))
@@ -145,55 +139,18 @@ public class OrderService {
         List<Long> productIds = orders.stream().map(OrderRequestDto::getProductId).toList();
 
         // 프로덕트 정보
-        List<OrderItemDto> products = productSearch(productIds).stream()
+        List<OrderItemDto> products = apiClient.getProducts(productIds).stream()
                 .map(searchProduct ->
                     new OrderItemDto(searchProduct.getProductId(), searchProduct.getProductName(), searchProduct.getOriginalPrice())
                 ).toList();
 
         // 이벤트 정보
-        List<EventProductResponse> events = eventSearch(productIds);
+        List<EventProductResponse> events = apiClient.getEvents(productIds);
 
 
         // 프로덕트 재고
         return null;
     }
 
-    private List<SearchProductResponse> productSearch(List<Long> productIds) {
-        SearchProductListRequest orderAddProductRequest = new SearchProductListRequest(productIds);
-        URI uri = UriComponentsBuilder
-                .fromUriString("http://localhost:8080")
-                .path("/api/products/search-product")
-                .encode()
-                .build()
-                .toUri();
 
-        ResponseEntity<List<SearchProductResponse>> response = restTemplate.exchange(
-                uri,
-                HttpMethod.POST,
-                new HttpEntity<>(orderAddProductRequest),
-                new ParameterizedTypeReference<List<SearchProductResponse>>() {
-                }
-        );
-
-        return response.getBody();
-    }
-    private List<EventProductResponse> eventSearch(List<Long> productIds) {
-        SearchEventToProductIdRequest searchEventRequest = new SearchEventToProductIdRequest(productIds);
-        URI uri = UriComponentsBuilder
-                .fromUriString("http://localhost:8080")
-                .path("/api/event/search-event")
-                .encode()
-                .build()
-                .toUri();
-
-        ResponseEntity<List<EventProductResponse>> response = restTemplate.exchange(
-                uri,
-                HttpMethod.POST,
-                new HttpEntity<>(searchEventRequest),
-                new ParameterizedTypeReference<List<EventProductResponse>>() {
-                }
-        );
-
-        return response.getBody();
-    }
 }
