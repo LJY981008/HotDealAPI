@@ -23,6 +23,9 @@ public class Order extends BaseEntity {
 
     private Long userId;
 
+    @Column(name = "order_total_count")
+    private Integer orderTotalCount;
+
     @Column(name = "order_total_price")
     private BigDecimal orderTotalPrice;
 
@@ -45,9 +48,12 @@ public class Order extends BaseEntity {
         orderItem.setOrder(this);
     }
 
+
     public Order(Long userId,
-                 BigDecimal orderTotalPrice) {
+                 BigDecimal orderTotalPrice,
+                 Integer orderTotalCount) {
         this.userId = userId;
         this.orderTotalPrice = orderTotalPrice;
+        this.orderTotalCount = orderTotalCount;
     }
 }

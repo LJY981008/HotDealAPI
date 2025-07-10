@@ -1,10 +1,7 @@
 package com.example.hotdeal.domain.order.api;
 
 import com.example.hotdeal.domain.order.application.Service.OrderService;
-import com.example.hotdeal.domain.order.application.dto.AddOrderItemRequestDto;
-import com.example.hotdeal.domain.order.application.dto.OrderItemResponseDto;
-import com.example.hotdeal.domain.order.application.dto.OrderRequestDto;
-import com.example.hotdeal.domain.order.application.dto.OrderResponseDto;
+import com.example.hotdeal.domain.order.application.dto.*;
 import com.example.hotdeal.domain.user.auth.domain.AuthUserDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -49,5 +46,14 @@ public class OrderController {
         orderService.orderCancel(orderId);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // 주문 조회
+    @GetMapping("/orders/{orderId}")
+    public ResponseEntity<OrderItemResponseDto> searchOrder(@PathVariable Long orderId){
+
+        OrderItemResponseDto responseDto = orderService.searchOrder(orderId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 }
