@@ -5,7 +5,7 @@ import com.example.hotdeal.domain.event.domain.dto.*;
 import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import com.example.hotdeal.domain.event.infra.EventRepository;
-import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
+import com.example.hotdeal.domain.common.client.product.dto.SearchProductResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;

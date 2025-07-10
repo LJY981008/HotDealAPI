@@ -1,6 +1,6 @@
 package com.example.hotdeal.domain.event.domain.entity;
 
-import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
+import com.example.hotdeal.domain.common.client.product.dto.SearchProductResponse;
 import jakarta.persistence.*;
 import lombok.Getter;
 

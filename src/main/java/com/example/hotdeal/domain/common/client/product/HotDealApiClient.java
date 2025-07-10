@@ -1,7 +1,7 @@
 package com.example.hotdeal.domain.common.client.product;
 
 import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
-import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
+import com.example.hotdeal.domain.common.client.product.dto.SearchProductResponse;
 import com.example.hotdeal.global.enums.CustomErrorCode;
 import com.example.hotdeal.global.exception.CustomException;
 import lombok.extern.slf4j.Slf4j;
