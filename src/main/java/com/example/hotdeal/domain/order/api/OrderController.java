@@ -1,6 +1,8 @@
 package com.example.hotdeal.domain.order.api;
 
 import com.example.hotdeal.domain.order.application.Service.OrderService;
+import com.example.hotdeal.domain.order.application.dto.AddOrderItemRequestDto;
+import com.example.hotdeal.domain.order.application.dto.OrderItemResponseDto;
 import com.example.hotdeal.domain.order.application.dto.OrderRequestDto;
 import com.example.hotdeal.domain.order.application.dto.OrderResponseDto;
 import com.example.hotdeal.domain.user.auth.domain.AuthUserDto;
@@ -20,12 +22,41 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
     private final OrderService orderService;
 
-    @PostMapping("/orders")
+    // 기존 방식 제품 추가
+    @PostMapping("/orders/v1")
     public ResponseEntity<OrderResponseDto> addOrderItems(@AuthenticationPrincipal AuthUserDto user,
                                                           @Valid @RequestBody OrderRequestDto requestDto) {
 
         OrderResponseDto responseDto = orderService.addOrder(user.getId(), requestDto);
 
-        return new ResponseEntity<>(responseDto,HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+    }
+
+    // RestTemplate 적용한 제품 추가
+    @PostMapping("/orders/v2")
+    public ResponseEntity<OrderItemResponseDto> addOrderItemsV1(@AuthenticationPrincipal AuthUserDto user,
+                                                                @Valid @RequestBody AddOrderItemRequestDto requestDto) {
+
+        OrderItemResponseDto responseDto = orderService.addOrderV1(user.getId(), requestDto);
+
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+    }
+
+
+    @PostMapping("/orders/v0")
+    public ResponseEntity<OrderItemResponseDto> addOrderItemsV0(
+            @AuthenticationPrincipal AuthUserDto user,
+            @Valid @RequestBody AddOrderItemRequestDto requestDto
+    ) {
+        OrderItemResponseDto responseDto = orderService.addOrderV0(user.getId(), requestDto);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+    }
+    // 주문 삭제
+    @PutMapping("/orders/{orderId}")
+    public ResponseEntity<Void> orderCancel(@PathVariable Long orderId){
+
+        orderService.orderCancel(orderId);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

@@ -20,7 +20,6 @@ public class Event extends BaseEntity {
 
     @Setter
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @Column(name = "product_ids")
     private List<EventItem> products;
 
     @Column(name = "event_type")

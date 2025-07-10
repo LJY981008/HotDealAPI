@@ -1,29 +1,21 @@
 package com.example.hotdeal.domain.event.application;
 
-import com.example.hotdeal.domain.event.domain.dto.WSEventProduct;
+import com.example.hotdeal.domain.common.client.product.HotDealApiClient;
+import com.example.hotdeal.domain.event.domain.dto.*;
 import com.example.hotdeal.domain.event.domain.entity.Event;
-import com.example.hotdeal.domain.event.domain.dto.EventAddProductRequest;
-import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
-import com.example.hotdeal.domain.event.domain.dto.EventResponse;
 import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import com.example.hotdeal.domain.event.infra.EventRepository;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+
 
 @Slf4j
 @Service
@@ -32,7 +24,7 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final RestTemplate restTemplate;
+    private final HotDealApiClient apiClient;
 
     /**
      * 이벤트 생성
@@ -42,8 +34,8 @@ public class EventService {
     @Transactional
     public EventResponse createEvent(EventCrateRequest request) {
         Event event = eventRepository.save(request.toEvent());
-        List<SearchProductResponse> searchProductResponses = productSearch(request.getProductIds());
-        List<EventItem> eventItems = searchProductResponses.stream().map(response -> new EventItem(response, event.getEventDiscount()))
+        List<SearchProductResponse> searchProductResponses = apiClient.getProducts(request.getProductIds());
+        List<EventItem> eventItems = searchProductResponses.stream().map(response -> new EventItem(response, event.getEventDiscount(), event))
                 .toList();
         event.setProducts(eventItems);
 
@@ -73,34 +65,43 @@ public class EventService {
 
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
-    public void removeLastEvent(){
+    public void removeLastEvent() {
         LocalDateTime now = LocalDateTime.now();
         int deletedCount = eventRepository.softDeleteExpiredEvents(now);
         log.info("기한이 지난 이벤트 삭제 총 {}개", deletedCount);
     }
 
-    /**
-     * 레스트 템플릿 호출
-     *
-     * @param productIds
-     * @return
-     */
-    private List<SearchProductResponse> productSearch(List<Long> productIds) {
-        EventAddProductRequest eventAddProductRequest = new EventAddProductRequest(productIds);
-        URI uri = UriComponentsBuilder
-                .fromUriString("http://localhost:8080")
-                .path("/api/products/search-product")
-                .encode()
-                .build()
-                .toUri();
+    public List<EventProductResponse> getEvent(List<Long> productIds) {
+        List<Event> events = eventRepository.findEventsByProductIds(productIds);
 
-        ResponseEntity<List<SearchProductResponse>> response = restTemplate.exchange(
-                uri,
-                HttpMethod.POST,
-                new HttpEntity<>(eventAddProductRequest),
-                new ParameterizedTypeReference<List<SearchProductResponse>>() {}
-        );
+        Map<Long, EventProductResponse> bestDealEventsMap = new HashMap<>();
 
-        return response.getBody();
+        for (Event event : events) {
+
+            for (EventItem eventItem : event.getProducts()) {
+                Long currentProductId = eventItem.getProductId();
+
+                if (productIds.contains(currentProductId)) {
+                    EventProductResponse currentEventResponse = new EventProductResponse(event, eventItem);
+
+                    if (bestDealEventsMap.containsKey(currentProductId)) {
+                        EventProductResponse existingEventResponse = bestDealEventsMap.get(currentProductId);
+
+                        if (currentEventResponse.getDiscountPrice().compareTo(existingEventResponse.getDiscountPrice()) < 0) {
+                            bestDealEventsMap.put(currentProductId, currentEventResponse);
+                        } else if (currentEventResponse.getDiscountPrice().compareTo(existingEventResponse.getDiscountPrice()) == 0) {
+                            if (currentEventResponse.getEventDiscount().compareTo(existingEventResponse.getEventDiscount()) > 0) {
+                                bestDealEventsMap.put(currentProductId, currentEventResponse);
+                            }
+                        }
+                    } else {
+                        bestDealEventsMap.put(currentProductId, currentEventResponse);
+                    }
+                }
+            }
+        }
+
+        return new ArrayList<>(bestDealEventsMap.values());
     }
+
 }
