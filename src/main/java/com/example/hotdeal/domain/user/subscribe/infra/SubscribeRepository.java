@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface SubscribeRepository extends JpaRepository<Subscribe,Long> {
     Optional<Subscribe> findSubscribeByUserIdAndProductId(Long userId, Long productId);
 
-    List<SubscribeResponse> findAllByProductId(Long productId);
+    List<Subscribe> findAllByProductId(Long productId);
 }

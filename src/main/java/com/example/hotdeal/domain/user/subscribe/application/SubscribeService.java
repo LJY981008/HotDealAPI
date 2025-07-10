@@ -28,11 +28,12 @@ public class SubscribeService {
 
     @Transactional(readOnly = true)
     public List<SubscribeResponse> getSubscribeUserByProductId(Long productId) {
-        List<SubscribeResponse> subscribes = subscribeRepository.findAllByProductId(productId);
+        List<Subscribe> subscribes = subscribeRepository.findAllByProductId(productId);
         if (subscribes.isEmpty()) {
             throw new CustomException(CustomErrorCode.NOT_FOUND_PRODUCT, "제품을 구독한 사용자가 없습니다.");
         }
-        return subscribes;
+
+        return subscribes.stream().map(subscribe -> new SubscribeResponse(subscribe.getUserId(), subscribe.getProductId())).collect(Collectors.toList());
     }
 
     @Transactional
