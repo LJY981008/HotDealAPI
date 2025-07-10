@@ -3,13 +3,22 @@ package com.example.hotdeal.domain.product.notification.application;
 import com.example.hotdeal.domain.product.notification.domain.ListenProductEvent;
 import com.example.hotdeal.domain.product.notification.domain.Notification;
 import com.example.hotdeal.domain.product.notification.infra.NotificationRepository;
+import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
+import com.example.hotdeal.domain.user.subscribe.domain.SubscribeResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,30 +29,54 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RestTemplate restTemplate;
 
 
-    //TODO 구독 경로에 productID를 추가해 해당 프로덕트를 구독한 유저를 분류해도 될듯?
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyProductEventMessage(ListenProductEvent listenProductEvent) {
-        try {
-            log.info("NotificationService.notifyProductEventMessage 시작");
-            
-            Notification notification = listenProductEvent.toNotification();
-            notificationRepository.save(notification);
-            String notificationMessages = notification.getNotification_message();
-            
-            log.info("웹소켓 메시지 전송 시작: {}", notificationMessages);
-            try {
-                messagingTemplate.convertAndSend("/topic/notification", notificationMessages);
-                log.info("웹소켓 메시지 전송 완료");
-            } catch (Exception wsException) {
-                log.error("웹소켓 메시지 전송 실패: {}", wsException.getMessage(), wsException);
-                throw wsException;
-            }
-            
-        } catch (Exception e) {
-            log.error("notifyProductEventMessage 에러 message {}", e.getMessage(), e);
-        }
+        log.info("NotificationService.notifyProductEventMessage 시작");
 
+        Notification notification = listenProductEvent.toNotification();
+        notificationRepository.save(notification);
+        String notificationMessages = notification.getNotification_message();
+
+        Long productId = listenProductEvent.getProductId();
+        List<SubscribeResponse> subscribeResponses = searchUserFromSubscribeToProduct(productId);
+
+        log.info("웹소켓 메시지 전송 시작: {}", notificationMessages);
+
+        try {
+            for (SubscribeResponse subscribeResponse : subscribeResponses) {
+                messagingTemplate.convertAndSendToUser(
+                    subscribeResponse.userId().toString(),
+                    "/topic/notification",
+                    notificationMessages
+                );
+                log.debug("사용자 {}에게 알림 메시지 전송 완료", subscribeResponse.userId());
+            }
+
+            log.info("웹소켓 메시지 전송 완료 - 총 {}명의 구독자에게 전송", subscribeResponses.size());
+        } catch (Exception wsException) {
+            log.error("웹소켓 메시지 전송 실패: {}", wsException.getMessage(), wsException);
+            throw wsException;
+        }
+    }
+
+    private List<SubscribeResponse> searchUserFromSubscribeToProduct(Long productId) {
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost:8080")
+                .path("/api/products/search-product")
+                .queryParam("productId", productId)
+                .encode()
+                .build()
+                .toUri();
+
+        ResponseEntity<List<SubscribeResponse>> response = restTemplate.exchange(
+                uri,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<SubscribeResponse>>() {}
+        );
+        return response.getBody();
     }
 }
