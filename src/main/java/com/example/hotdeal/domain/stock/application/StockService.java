@@ -4,6 +4,7 @@ import com.example.hotdeal.domain.stock.domain.Stock;
 import com.example.hotdeal.domain.stock.infra.StockRepository;
 
 import com.example.hotdeal.global.lock.LockService;
+import com.example.hotdeal.global.lock.RedissonLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class StockService {
 
     private final StockRepository repository;
-    private final LockService lockService;
+    //private final LockService lockService;
+    private final RedissonLockService lockService;
     private final StockTransactionService stockTransactionService;
 
     // 재고 증가 (관리자용)
@@ -56,4 +58,18 @@ public class StockService {
           return null;
        });
    }
+
+   //Mysql 행 락 사용
+   @Transactional
+    public void decreaseWithMysqlLock(Long stockId, int quantity) {
+       Stock stock = repository.findByIdWithPessimisticLock(stockId)
+               .orElseThrow(()-> new IllegalArgumentException("재고 없음"));
+
+       if (stock.getQuantity() < quantity)
+           throw new IllegalStateException("재고 부족");
+
+       stock.decrease(quantity);  // dirty checking → UPDATE
+
+   }
+
 }
