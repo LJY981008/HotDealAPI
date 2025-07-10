@@ -1,6 +1,7 @@
 package com.example.hotdeal.domain.user.auth.security;
 
 import com.example.hotdeal.domain.user.auth.domain.AuthUserDto;
+import com.example.hotdeal.domain.user.auth.infra.TokenBlacklistRepository;
 import com.example.hotdeal.global.enums.UserRole;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -12,16 +13,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
 
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
     @Override
     public void doFilterInternal(
@@ -42,6 +46,11 @@ public class JwtFilter extends OncePerRequestFilter {
             Claims claims = jwtUtil.extractClaims(jwt);
             if (claims == null) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "잘못된 토큰입니다.");
+                return;
+            }
+
+            if (tokenBlacklistRepository.existsById(jwt)){
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "블랙리스트에 등록된 토큰입니다.");
                 return;
             }
 
