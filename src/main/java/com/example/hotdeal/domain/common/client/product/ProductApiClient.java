@@ -3,16 +3,8 @@ package com.example.hotdeal.domain.common.client.product;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
-import java.util.List;
 
 @Slf4j
 @Component
