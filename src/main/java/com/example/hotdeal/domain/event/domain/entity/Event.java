@@ -35,6 +35,9 @@ public class Event extends BaseEntity {
     @Column(name = "start_event_time")
     private LocalDateTime startEventTime;
 
+    @Column(name = "end_event_time")
+    private LocalDateTime endEventTime;
+
     public Event() {}
 
     public Event(EventType eventType, BigDecimal eventDiscount, int eventDuration, LocalDateTime startEventTime) {
@@ -42,6 +45,7 @@ public class Event extends BaseEntity {
         this.eventDiscount = eventDiscount;
         this.eventDuration = eventDuration;
         this.startEventTime = startEventTime;
+        this.endEventTime = startEventTime.plusDays(eventDuration);
     }
 
 }

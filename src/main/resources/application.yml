@@ -1,12 +1,19 @@
 spring:
   application:
-    name: taskProject
+    name: HotDeal
 
   datasource:
     url: jdbc:mysql://localhost:3306/${DB_SCHEME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 500
+      minimum-idle: 50
+      connection-timeout: 60000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
 
   jpa:
     hibernate:
@@ -19,11 +26,7 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false
 
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration
-      - org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration
-      - org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
+
 
   data:
     redis:
