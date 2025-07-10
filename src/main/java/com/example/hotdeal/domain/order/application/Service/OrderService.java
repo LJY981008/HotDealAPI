@@ -156,4 +156,20 @@ public class OrderService {
     }
 
 
+    public OrderItemResponseDto addOrderV0(Long id, AddOrderItemRequestDto requestDto) {
+        //TODO 프로덕트 정보(이름, 가격), 프로덕트 재고(남은 개수), 이벤트 정보(할인율, 할인가격) 호출 필요
+        List<OrderRequestDto> orders = requestDto.getOrderItems();
+
+        // 프로덕트 정보
+        List<OrderItemDto> products = productSearch(orders.stream().map(OrderRequestDto::getProductId).toList()).stream()
+                .map(searchProduct ->
+                    new OrderItemDto(searchProduct.getProductId(), searchProduct.getProductName(), searchProduct.getOriginalPrice())
+                ).toList();
+
+        // 이벤트 정보
+
+
+        // 프로덕트 재고
+        return null;
+    }
 }
