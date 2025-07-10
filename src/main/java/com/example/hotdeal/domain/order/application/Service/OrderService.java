@@ -2,8 +2,6 @@ package com.example.hotdeal.domain.order.application.Service;
 
 import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
 import com.example.hotdeal.domain.event.domain.dto.SearchEventToProductIdRequest;
-import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
-import com.example.hotdeal.domain.event.domain.dto.SearchEventToProductIdRequest;
 import com.example.hotdeal.domain.order.application.dto.*;
 import com.example.hotdeal.domain.order.domain.Order;
 import com.example.hotdeal.domain.order.domain.OrderItem;
@@ -17,6 +15,7 @@ import com.example.hotdeal.global.enums.CustomErrorCode;
 import com.example.hotdeal.global.exception.CustomException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -34,14 +33,15 @@ import java.util.List;
 @Slf4j
 @AllArgsConstructor
 public class OrderService {
-    private final RestTemplate restTemplate;
 
+    private final RestTemplate restTemplate;
+    private final ApplicationEventPublisher eventPublisher;
     private final OrderRepository orderRepository;
     private final ProductRepositoryImpl productRepositoryImpl;
 
     /*
-    * 기존에 하던 Product에 연관관계 맺어서 가져오는 방법
-    */
+     * 기존에 하던 Product에 연관관계 맺어서 가져오는 방법
+     */
     @Transactional
     public OrderResponseDto addOrder(Long userId, OrderRequestDto requestDto) {
 
@@ -128,7 +128,10 @@ public class OrderService {
         order.assignOrderItems(orderItems);
 
         Order saveOrder = orderRepository.save(order);
+
         saveOrder.setOrderStatus(OrderStatus.ORDER_BEFORE);
+
+        eventPublisher.publishEvent("주문 완료");
 
         return new OrderItemResponseDto(userId,
                 saveOrder.getOrderId(),
@@ -139,75 +142,81 @@ public class OrderService {
                 saveOrder.getOrderStatus());
     }
 
-    public OrderItemResponseDto addOrderV0(Long id, AddOrderItemRequestDto requestDto) {
+    public OrderItemResponseDto addOrderV0(Long userId, AddOrderItemRequestDto requestDto) {
         //TODO 프로덕트 정보(이름, 가격)*완료* , 프로덕트 재고(남은 개수), 이벤트 정보(할인율, 할인가격)*완료* 호출 필요
+        BigDecimal orderTotalPrice = BigDecimal.ZERO;
+        int totalcount = 0;
         List<OrderRequestDto> orders = requestDto.getOrderItems();
         List<Long> productIds = orders.stream().map(OrderRequestDto::getProductId).toList();
+
+
+        // requestDto에 있는 quantity값 저장
+        List<Integer> counts = new ArrayList<>();
+        for(OrderRequestDto orderRequestDto : orders){
+            counts.add(orderRequestDto.getQuantity());
+        }
 
         // 프로덕트 정보
         List<OrderItemDto> products = productSearch(productIds).stream()
                 .map(searchProduct ->
-                    new OrderItemDto(searchProduct.getProductId(), searchProduct.getProductName(), searchProduct.getOriginalPrice())
+                        new OrderItemDto(searchProduct.getProductId(), searchProduct.getProductName(), searchProduct.getOriginalPrice())
                 ).toList();
 
         // 이벤트 정보
-        List<EventProductResponse> events = eventSearch(productIds);
-
+//        List<EventProductResponse> events = eventSearch(productIds).stream().toList();
 
         // 프로덕트 재고
-        return null;
-    }
 
-    private List<SearchProductResponse> productSearch(List<Long> productIds) {
-        SearchProductListRequest orderAddProductRequest = new SearchProductListRequest(productIds);
-        URI uri = UriComponentsBuilder
-                .fromUriString("http://localhost:8080")
-                .path("/api/products/search-product")
-                .encode()
-                .build()
-                .toUri();
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (int i = 0; i < productIds.size(); i++) {
+            OrderItemDto orderItemDto = products.get(i);
+            orderItemDto.updateItemQuantities(counts.get(i));
 
-        ResponseEntity<List<SearchProductResponse>> response = restTemplate.exchange(
-                uri,
-                HttpMethod.POST,
-                new HttpEntity<>(orderAddProductRequest),
-                new ParameterizedTypeReference<List<SearchProductResponse>>() {
-                }
-        );
+            // 개별 물품 총합
+            Integer quantity = orderItemDto.getQuantity();
+            BigDecimal productPrice = orderItemDto.getProductPrice();
+            orderItemDto.updateItemTotalPrice(productPrice.multiply(BigDecimal.valueOf(quantity)));
 
-        return response.getBody();
-    }
+            // 전체 물품 총합
+            BigDecimal itemTotalPrice = orderItemDto.getItemTotalPrice();
+            orderTotalPrice = orderTotalPrice.add(itemTotalPrice);
 
-    private List<EventProductResponse> eventSearch(List<Long> productIds) {
-        SearchEventToProductIdRequest searchEventRequest = new SearchEventToProductIdRequest(productIds);
-        URI uri = UriComponentsBuilder
-                .fromUriString("http://localhost:8080")
-                .path("/api/event/search-event")
-                .encode()
-                .build()
-                .toUri();
+            // 전체 물품 개수
+            totalcount += counts.get(i);
+            orderItems.add(new OrderItem(orderItemDto.getProductId(), orderItemDto.getProductName(), orderItemDto.getQuantity(), orderItemDto.getItemTotalPrice()));
+        }
 
-        ResponseEntity<List<EventProductResponse>> response = restTemplate.exchange(
-                uri,
-                HttpMethod.POST,
-                new HttpEntity<>(searchEventRequest),
-                new ParameterizedTypeReference<List<EventProductResponse>>() {
-                }
-        );
+        //product --> orderItem
+        Order order = new Order(userId, orderTotalPrice, totalcount);
+        order.assignOrderItems(orderItems);
 
-        return response.getBody();
+        Order saveOrder = orderRepository.save(order);
+
+        saveOrder.setOrderStatus(OrderStatus.ORDER_BEFORE);
+
+        eventPublisher.publishEvent("주문 완료");
+
+        return new OrderItemResponseDto(userId,
+                saveOrder.getOrderId(),
+                products,
+                saveOrder.getOrderTotalCount(),
+                saveOrder.getOrderTotalPrice(),
+                saveOrder.getOrderTime(),
+                saveOrder.getOrderStatus());
     }
 
     // 주문 물품 삭제
     @Transactional
+
     public String orderCancel(Long orderId) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_ORDER));
 
         orderRepository.delete(order);
-
         order.setOrderStatus(OrderStatus.ORDER_FAILURE);
+
+        eventPublisher.publishEvent("주문 취소");
 
         return "제품 주문이 취소되었습니다.";
     }
@@ -232,4 +241,46 @@ public class OrderService {
                 order.getOrderTime(),
                 order.getOrderStatus());
     }
+
+    private List<SearchProductResponse> productSearch(List<Long> productIds) {
+        SearchProductListRequest orderAddProductRequest = new SearchProductListRequest(productIds);
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost:8080")
+                .path("/api/products/search-product")
+                .encode()
+                .build()
+                .toUri();
+
+        ResponseEntity<List<SearchProductResponse>> response = restTemplate.exchange(
+                uri,
+                HttpMethod.POST,
+                new HttpEntity<>(orderAddProductRequest),
+                new ParameterizedTypeReference<List<SearchProductResponse>>() {
+                }
+        );
+
+        return response.getBody();
+    }
+
+
+
+    private List<EventProductResponse> eventSearch(List<Long> productIds) {
+        SearchEventToProductIdRequest searchEventRequest = new SearchEventToProductIdRequest(productIds);
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost:8080")
+                .path("/api/stock/search-event")
+                .encode()
+                .build()
+                .toUri();
+
+        ResponseEntity<List<EventProductResponse>> response = restTemplate.exchange(
+                uri,
+                HttpMethod.POST,
+                new HttpEntity<>(searchEventRequest),
+                new ParameterizedTypeReference<List<EventProductResponse>>() {
+                }
+        );
+        return response.getBody();
+    }
+
 }
