@@ -28,8 +28,12 @@ public class Auth extends BaseEntity {
         this.role = UserRole.USER;
     }
 
-    public static Auth of(String email, String name, String password){
+    public static Auth createAuth(String email, String name, String password){
         return new Auth(email, name, password);
     }
 
+    //어드민 등록을 위한 메서드
+    public void changeRoleByAdmin() {
+        this.role = UserRole.ADMIN;
+    }
 }
