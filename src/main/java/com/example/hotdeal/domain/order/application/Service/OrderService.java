@@ -1,11 +1,16 @@
 package com.example.hotdeal.domain.order.application.Service;
 
+import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
+import com.example.hotdeal.domain.event.domain.dto.SearchEventToProductIdRequest;
+import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
+import com.example.hotdeal.domain.event.domain.dto.SearchEventToProductIdRequest;
 import com.example.hotdeal.domain.order.application.dto.*;
 import com.example.hotdeal.domain.order.domain.Order;
 import com.example.hotdeal.domain.order.domain.OrderItem;
 import com.example.hotdeal.domain.order.enums.OrderStatus;
 import com.example.hotdeal.domain.order.infra.OrderRepository;
 import com.example.hotdeal.domain.product.product.domain.Product;
+import com.example.hotdeal.domain.product.product.domain.dto.SearchProductListRequest;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import com.example.hotdeal.domain.product.product.infra.ProductRepositoryImpl;
 import com.example.hotdeal.global.enums.CustomErrorCode;
@@ -20,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
@@ -36,8 +40,8 @@ public class OrderService {
     private final ProductRepositoryImpl productRepositoryImpl;
 
     /*
-     * 기존에 하던 Product에 연관관계 맺어서 가져오는 방법
-     */
+    * 기존에 하던 Product에 연관관계 맺어서 가져오는 방법
+    */
     @Transactional
     public OrderResponseDto addOrder(Long userId, OrderRequestDto requestDto) {
 
@@ -135,8 +139,27 @@ public class OrderService {
                 saveOrder.getOrderStatus());
     }
 
+    public OrderItemResponseDto addOrderV0(Long id, AddOrderItemRequestDto requestDto) {
+        //TODO 프로덕트 정보(이름, 가격)*완료* , 프로덕트 재고(남은 개수), 이벤트 정보(할인율, 할인가격)*완료* 호출 필요
+        List<OrderRequestDto> orders = requestDto.getOrderItems();
+        List<Long> productIds = orders.stream().map(OrderRequestDto::getProductId).toList();
+
+        // 프로덕트 정보
+        List<OrderItemDto> products = productSearch(productIds).stream()
+                .map(searchProduct ->
+                    new OrderItemDto(searchProduct.getProductId(), searchProduct.getProductName(), searchProduct.getOriginalPrice())
+                ).toList();
+
+        // 이벤트 정보
+        List<EventProductResponse> events = eventSearch(productIds);
+
+
+        // 프로덕트 재고
+        return null;
+    }
+
     private List<SearchProductResponse> productSearch(List<Long> productIds) {
-        OrderAddProductRequest orderAddProductRequest = new OrderAddProductRequest(productIds);
+        SearchProductListRequest orderAddProductRequest = new SearchProductListRequest(productIds);
         URI uri = UriComponentsBuilder
                 .fromUriString("http://localhost:8080")
                 .path("/api/products/search-product")
@@ -149,6 +172,26 @@ public class OrderService {
                 HttpMethod.POST,
                 new HttpEntity<>(orderAddProductRequest),
                 new ParameterizedTypeReference<List<SearchProductResponse>>() {
+                }
+        );
+
+        return response.getBody();
+    }
+
+    private List<EventProductResponse> eventSearch(List<Long> productIds) {
+        SearchEventToProductIdRequest searchEventRequest = new SearchEventToProductIdRequest(productIds);
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost:8080")
+                .path("/api/event/search-event")
+                .encode()
+                .build()
+                .toUri();
+
+        ResponseEntity<List<EventProductResponse>> response = restTemplate.exchange(
+                uri,
+                HttpMethod.POST,
+                new HttpEntity<>(searchEventRequest),
+                new ParameterizedTypeReference<List<EventProductResponse>>() {
                 }
         );
 
