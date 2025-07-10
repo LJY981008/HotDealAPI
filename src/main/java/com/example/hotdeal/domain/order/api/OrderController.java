@@ -42,6 +42,15 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 
+
+    @PostMapping("/orders/v0")
+    public ResponseEntity<OrderItemResponseDto> addOrderItemsV0(
+            @AuthenticationPrincipal AuthUserDto user,
+            @Valid @RequestBody AddOrderItemRequestDto requestDto
+    ) {
+        OrderItemResponseDto responseDto = orderService.addOrderV0(user.getId(), requestDto);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+    }
     // 주문 삭제
     @PutMapping("/orders/{orderId}")
     public ResponseEntity<Void> orderCancel(@PathVariable Long orderId){

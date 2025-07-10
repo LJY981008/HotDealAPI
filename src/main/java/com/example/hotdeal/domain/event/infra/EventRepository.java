@@ -14,4 +14,11 @@ public interface EventRepository extends JpaRepository<Event,Long> {
     @Query("UPDATE Event e SET e.deleted = true " +
             "WHERE e.endEventTime < :nowTime AND e.deleted = false")
     int softDeleteExpiredEvents(@Param("nowTime") LocalDateTime nowTime);
+
+    @Query("SELECT DISTINCT e FROM Event e " +
+            "JOIN FETCH e.products ei " +
+            "WHERE ei.productId IN :productIds " +
+            "AND e.deleted = false")
+    List<Event> findEventsByProductIds(@Param("productIds") List<Long> productIds);
+
 }

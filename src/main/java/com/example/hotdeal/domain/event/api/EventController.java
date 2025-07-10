@@ -1,14 +1,15 @@
 package com.example.hotdeal.domain.event.api;
 
 import com.example.hotdeal.domain.event.application.EventService;
-import com.example.hotdeal.domain.event.domain.dto.EventAddProductRequest;
-import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
-import com.example.hotdeal.domain.event.domain.dto.EventResponse;
+import com.example.hotdeal.domain.event.domain.dto.*;
+import com.example.hotdeal.domain.event.domain.entity.Event;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/event")
@@ -23,5 +24,13 @@ public class EventController {
     ){
         EventResponse event = eventService.createEvent(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(event);
+    }
+
+    @PostMapping("/search-event")
+    public ResponseEntity<List<EventProductResponse>> getEvents(
+            @RequestBody SearchEventToProductIdRequest request
+    ) {
+        List<EventProductResponse> responses = eventService.getEvent(request.getProductIds());
+        return ResponseEntity.status(HttpStatus.OK).body(responses);
     }
 }

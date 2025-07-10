@@ -1,10 +1,7 @@
 package com.example.hotdeal.domain.event.application;
 
-import com.example.hotdeal.domain.event.domain.dto.WSEventProduct;
+import com.example.hotdeal.domain.event.domain.dto.*;
 import com.example.hotdeal.domain.event.domain.entity.Event;
-import com.example.hotdeal.domain.event.domain.dto.EventAddProductRequest;
-import com.example.hotdeal.domain.event.domain.dto.EventCrateRequest;
-import com.example.hotdeal.domain.event.domain.dto.EventResponse;
 import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import com.example.hotdeal.domain.event.infra.EventRepository;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductListRequest;
@@ -24,7 +21,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -74,7 +72,7 @@ public class EventService {
 
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
-    public void removeLastEvent(){
+    public void removeLastEvent() {
         LocalDateTime now = LocalDateTime.now();
         int deletedCount = eventRepository.softDeleteExpiredEvents(now);
         log.info("기한이 지난 이벤트 삭제 총 {}개", deletedCount);
@@ -99,9 +97,44 @@ public class EventService {
                 uri,
                 HttpMethod.POST,
                 new HttpEntity<>(request),
-                new ParameterizedTypeReference<List<SearchProductResponse>>() {}
+                new ParameterizedTypeReference<List<SearchProductResponse>>() {
+                }
         );
 
         return response.getBody();
     }
+
+    public List<EventProductResponse> getEvent(List<Long> productIds) {
+        List<Event> events = eventRepository.findEventsByProductIds(productIds);
+
+        Map<Long, EventProductResponse> bestDealEventsMap = new HashMap<>();
+
+        for (Event event : events) {
+
+            for (EventItem eventItem : event.getProducts()) {
+                Long currentProductId = eventItem.getProductId();
+
+                if (productIds.contains(currentProductId)) {
+                    EventProductResponse currentEventResponse = new EventProductResponse(event, eventItem);
+
+                    if (bestDealEventsMap.containsKey(currentProductId)) {
+                        EventProductResponse existingEventResponse = bestDealEventsMap.get(currentProductId);
+
+                        if (currentEventResponse.getDiscountPrice().compareTo(existingEventResponse.getDiscountPrice()) < 0) {
+                            bestDealEventsMap.put(currentProductId, currentEventResponse);
+                        } else if (currentEventResponse.getDiscountPrice().compareTo(existingEventResponse.getDiscountPrice()) == 0) {
+                            if (currentEventResponse.getEventDiscount().compareTo(existingEventResponse.getEventDiscount()) > 0) {
+                                bestDealEventsMap.put(currentProductId, currentEventResponse);
+                            }
+                        }
+                    } else {
+                        bestDealEventsMap.put(currentProductId, currentEventResponse);
+                    }
+                }
+            }
+        }
+
+        return new ArrayList<>(bestDealEventsMap.values());
+    }
+
 }
