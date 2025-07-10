@@ -3,13 +3,10 @@ package com.example.hotdeal.domain.user.auth.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @RedisHash(value = "refreshToken", timeToLive = 60*60*24) //1일 세팅
 public class RefreshToken {
