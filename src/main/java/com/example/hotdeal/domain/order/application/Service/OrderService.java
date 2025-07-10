@@ -92,10 +92,13 @@ public class OrderService {
         }
 
         List<SearchProductResponse> searchProductResponses = productSearch(productIds);
-        List<OrderItemDto> product = searchProductResponses.stream().map(response -> new OrderItemDto(response.getProductId(),
+        List<OrderItemDto> product = searchProductResponses.stream()
+                .map(response -> new OrderItemDto(response.getProductId(),
                         response.getProductName(),
                         response.getOriginalPrice()))
                 .toList();
+
+        List<OrderItem> orderItems = new ArrayList<>();
 
         // Todo : 추후 개선
         for (int i = 0; i < productIds.size(); i++) {
@@ -113,6 +116,7 @@ public class OrderService {
 
             // 전체 물품 개수
             totalcount += counts.get(i);
+            orderItems.add(new OrderItem(orderItemDto.getProductId(), orderItemDto.getProductName(), orderItemDto.getQuantity(), orderItemDto.getItemTotalPrice()));
         }
 
         //product --> orderItem

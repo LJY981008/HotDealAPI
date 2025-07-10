@@ -43,9 +43,11 @@ public class Order extends BaseEntity {
 
     public Order() {}
 
-    public void addOrderItem(OrderItem orderItem) {
-        this.orderItems.add(orderItem);
-        orderItem.setOrder(this);
+    public void assignOrderItems(List<OrderItem> orderItems) {
+        orderItems.forEach(item -> {
+            item.setOrder(this);
+            this.orderItems.add(item);
+        });
     }
 
 
