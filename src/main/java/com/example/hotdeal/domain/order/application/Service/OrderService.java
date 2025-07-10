@@ -1,11 +1,14 @@
 package com.example.hotdeal.domain.order.application.Service;
 
+import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
+import com.example.hotdeal.domain.event.domain.dto.SearchEventToProductIdRequest;
 import com.example.hotdeal.domain.order.application.dto.*;
 import com.example.hotdeal.domain.order.domain.Order;
 import com.example.hotdeal.domain.order.domain.OrderItem;
 import com.example.hotdeal.domain.order.enums.OrderStatus;
 import com.example.hotdeal.domain.order.infra.OrderRepository;
 import com.example.hotdeal.domain.product.product.domain.Product;
+import com.example.hotdeal.domain.product.product.domain.dto.SearchProductListRequest;
 import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import com.example.hotdeal.domain.product.product.infra.ProductRepositoryImpl;
 import com.example.hotdeal.global.enums.CustomErrorCode;
@@ -125,8 +128,38 @@ public class OrderService {
                 saveOrder.getOrderStatus());
     }
 
+    @Transactional
+    public void orderCancel(Long orderId) {
+
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_ORDER));
+
+        orderRepository.delete(order);
+
+        order.setOrderStatus(OrderStatus.ORDER_FAILURE);
+    }
+
+
+    public OrderItemResponseDto addOrderV0(Long id, AddOrderItemRequestDto requestDto) {
+        //TODO 프로덕트 정보(이름, 가격)*완료* , 프로덕트 재고(남은 개수), 이벤트 정보(할인율, 할인가격)*완료* 호출 필요
+        List<OrderRequestDto> orders = requestDto.getOrderItems();
+        List<Long> productIds = orders.stream().map(OrderRequestDto::getProductId).toList();
+
+        // 프로덕트 정보
+        List<OrderItemDto> products = productSearch(productIds).stream()
+                .map(searchProduct ->
+                    new OrderItemDto(searchProduct.getProductId(), searchProduct.getProductName(), searchProduct.getOriginalPrice())
+                ).toList();
+
+        // 이벤트 정보
+        List<EventProductResponse> events = eventSearch(productIds);
+
+
+        // 프로덕트 재고
+        return null;
+    }
+
     private List<SearchProductResponse> productSearch(List<Long> productIds) {
-        OrderAddProductRequest orderAddProductRequest = new OrderAddProductRequest(productIds);
+        SearchProductListRequest orderAddProductRequest = new SearchProductListRequest(productIds);
         URI uri = UriComponentsBuilder
                 .fromUriString("http://localhost:8080")
                 .path("/api/products/search-product")
@@ -144,32 +177,23 @@ public class OrderService {
 
         return response.getBody();
     }
+    private List<EventProductResponse> eventSearch(List<Long> productIds) {
+        SearchEventToProductIdRequest searchEventRequest = new SearchEventToProductIdRequest(productIds);
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost:8080")
+                .path("/api/event/search-event")
+                .encode()
+                .build()
+                .toUri();
 
-    @Transactional
-    public void orderCancel(Long orderId) {
+        ResponseEntity<List<EventProductResponse>> response = restTemplate.exchange(
+                uri,
+                HttpMethod.POST,
+                new HttpEntity<>(searchEventRequest),
+                new ParameterizedTypeReference<List<EventProductResponse>>() {
+                }
+        );
 
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_ORDER));
-
-        orderRepository.delete(order);
-
-        order.setOrderStatus(OrderStatus.ORDER_FAILURE);
-    }
-
-
-    public OrderItemResponseDto addOrderV0(Long id, AddOrderItemRequestDto requestDto) {
-        //TODO 프로덕트 정보(이름, 가격), 프로덕트 재고(남은 개수), 이벤트 정보(할인율, 할인가격) 호출 필요
-        List<OrderRequestDto> orders = requestDto.getOrderItems();
-
-        // 프로덕트 정보
-        List<OrderItemDto> products = productSearch(orders.stream().map(OrderRequestDto::getProductId).toList()).stream()
-                .map(searchProduct ->
-                    new OrderItemDto(searchProduct.getProductId(), searchProduct.getProductName(), searchProduct.getOriginalPrice())
-                ).toList();
-
-        // 이벤트 정보
-
-
-        // 프로덕트 재고
-        return null;
+        return response.getBody();
     }
 }
