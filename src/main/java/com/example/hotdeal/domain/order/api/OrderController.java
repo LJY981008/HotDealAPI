@@ -41,11 +41,11 @@ public class OrderController {
 
     // 주문 삭제
     @PutMapping("/orders/{orderId}")
-    public ResponseEntity<Void> orderCancel(@PathVariable Long orderId){
+    public ResponseEntity<String> orderCancel(@PathVariable Long orderId){
 
-        orderService.orderCancel(orderId);
+        String cancel = orderService.orderCancel(orderId);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(cancel);
     }
 
     // 주문 조회

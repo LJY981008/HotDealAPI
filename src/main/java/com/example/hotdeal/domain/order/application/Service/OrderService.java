@@ -155,9 +155,9 @@ public class OrderService {
         return response.getBody();
     }
 
-    // 유저 삭제
+    // 주문 물품 삭제
     @Transactional
-    public void orderCancel(Long orderId) {
+    public String orderCancel(Long orderId) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.NOT_FOUND_ORDER));
@@ -165,9 +165,11 @@ public class OrderService {
         orderRepository.delete(order);
 
         order.setOrderStatus(OrderStatus.ORDER_FAILURE);
+
+        return "제품 주문이 취소되었습니다.";
     }
 
-    //
+    // 주문 조회
     public OrderItemResponseDto searchOrder(Long orderId) {
 
         Order order = orderRepository.findById(orderId)
