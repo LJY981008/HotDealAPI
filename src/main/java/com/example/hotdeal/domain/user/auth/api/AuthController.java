@@ -1,6 +1,7 @@
 package com.example.hotdeal.domain.user.auth.api;
 
 import com.example.hotdeal.domain.user.auth.application.AuthService;
+import com.example.hotdeal.domain.user.auth.domain.request.LogoutRequest;
 import com.example.hotdeal.domain.user.auth.domain.response.AccessTokenResponse;
 import com.example.hotdeal.domain.user.auth.domain.request.ReissueRequest;
 import com.example.hotdeal.domain.user.auth.domain.request.SigninRequest;
@@ -45,4 +46,11 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(accessToken);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+        @RequestBody LogoutRequest request
+    ) {
+        authService.registerTokenBlacklist(request);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
 }
