@@ -34,6 +34,15 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
+    @GetMapping("/{productId}")
+    public ResponseEntity<SearchProductResponse> getProduct(
+            @PathVariable Long productId
+    ) {
+        Product product = productService.findById(productId);
+        SearchProductResponse response = new SearchProductResponse(product);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CreateProductResponse> createProduct(

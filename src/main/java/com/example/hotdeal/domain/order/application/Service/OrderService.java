@@ -1,5 +1,7 @@
 package com.example.hotdeal.domain.order.application.Service;
 
+import com.example.hotdeal.domain.common.client.product.HotDealApiClient;
+import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
 import com.example.hotdeal.domain.order.application.dto.*;
 import com.example.hotdeal.domain.order.domain.Order;
 import com.example.hotdeal.domain.order.domain.OrderItem;
@@ -12,16 +14,10 @@ import com.example.hotdeal.global.enums.CustomErrorCode;
 import com.example.hotdeal.global.exception.CustomException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +29,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepositoryImpl productRepositoryImpl;
+    private final HotDealApiClient apiClient;
 
     /*
     * 기존에 하던 Product에 연관관계 맺어서 가져오는 방법
@@ -89,7 +86,7 @@ public class OrderService {
             counts.add(item.getQuantity());
         }
 
-        List<SearchProductResponse> searchProductResponses = productSearch(productIds);
+        List<SearchProductResponse> searchProductResponses = apiClient.getProducts(productIds);
         List<OrderItemDto> product = searchProductResponses.stream().map(response -> new OrderItemDto(response.getProductId(),
                         response.getProductName(),
                         response.getOriginalPrice()))
@@ -125,26 +122,6 @@ public class OrderService {
                 saveOrder.getOrderStatus());
     }
 
-    private List<SearchProductResponse> productSearch(List<Long> productIds) {
-        OrderAddProductRequest orderAddProductRequest = new OrderAddProductRequest(productIds);
-        URI uri = UriComponentsBuilder
-                .fromUriString("http://localhost:8080")
-                .path("/api/products/search-product")
-                .encode()
-                .build()
-                .toUri();
-
-        ResponseEntity<List<SearchProductResponse>> response = restTemplate.exchange(
-                uri,
-                HttpMethod.POST,
-                new HttpEntity<>(orderAddProductRequest),
-                new ParameterizedTypeReference<List<SearchProductResponse>>() {
-                }
-        );
-
-        return response.getBody();
-    }
-
     @Transactional
     public void orderCancel(Long orderId) {
 
@@ -153,6 +130,26 @@ public class OrderService {
         orderRepository.delete(order);
 
         order.setOrderStatus(OrderStatus.ORDER_FAILURE);
+    }
+
+
+    public OrderItemResponseDto addOrderV0(Long id, AddOrderItemRequestDto requestDto) {
+        //TODO 프로덕트 정보(이름, 가격)*완료* , 프로덕트 재고(남은 개수), 이벤트 정보(할인율, 할인가격)*완료* 호출 필요
+        List<OrderRequestDto> orders = requestDto.getOrderItems();
+        List<Long> productIds = orders.stream().map(OrderRequestDto::getProductId).toList();
+
+        // 프로덕트 정보
+        List<OrderItemDto> products = apiClient.getProducts(productIds).stream()
+                .map(searchProduct ->
+                    new OrderItemDto(searchProduct.getProductId(), searchProduct.getProductName(), searchProduct.getOriginalPrice())
+                ).toList();
+
+        // 이벤트 정보
+        List<EventProductResponse> events = apiClient.getEvents(productIds);
+
+
+        // 프로덕트 재고
+        return null;
     }
 
 
