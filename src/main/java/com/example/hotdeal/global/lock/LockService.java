@@ -18,12 +18,12 @@ public class LockService {
     private final LockRedisRepository lockRedisRepository;
 
 
-    // 기본 락 타임아웃: 1초
-    private static final Duration DEFAULT_LOCK_TIMEOUT = Duration.ofSeconds(1);
-    // 락 획득 재시도 간격: 5ms
-    private static final long RETRY_INTERVAL_MS = 5;
-    // 최대 재시도 시간: 30초
-    private static final Duration MAX_RETRY_DURATION = Duration.ofSeconds(30);
+    // 기본 락 타임아웃: 2초
+    private static final Duration DEFAULT_LOCK_TIMEOUT = Duration.ofSeconds(2);
+    // 락 획득 재시도 간격: 100ms
+    private static final long RETRY_INTERVAL_MS = 100;
+    // 최대 재시도 시간: 3초
+    private static final Duration MAX_RETRY_DURATION = Duration.ofSeconds(3);
 
     /**
      * 락을 획득하고 작업을 실행
