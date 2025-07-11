@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.GenericContainer;
@@ -30,6 +31,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Testcontainers
 @Import({RedisConfig.class, LockRedisRepository.class, LockService.class})
+@TestPropertySource(properties = {
+        "redis.host=localhost",
+        "redis.port=6379"
+})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class StockConcurrencySuccessTest {
 
