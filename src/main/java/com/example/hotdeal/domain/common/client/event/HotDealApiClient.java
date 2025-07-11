@@ -1,7 +1,6 @@
-package com.example.hotdeal.domain.common.client.product;
+package com.example.hotdeal.domain.common.client.event;
 
-import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
-import com.example.hotdeal.domain.common.client.product.dto.SearchProductResponse;
+import com.example.hotdeal.domain.common.client.event.dto.EventProductResponse;
 import com.example.hotdeal.global.enums.CustomErrorCode;
 import com.example.hotdeal.global.exception.CustomException;
 import lombok.extern.slf4j.Slf4j;
@@ -28,15 +27,9 @@ public class HotDealApiClient {
         this.baseUrl = "http://localhost:8080";
     }
 
-    public List<SearchProductResponse> getProducts(List<Long> productIds) {
-        return callApi(
-                "/api/products/search-product",
-                new restRequestProductIds(productIds),
-                new ParameterizedTypeReference<List<SearchProductResponse>>() {}
-        );
-    }
-
     public List<EventProductResponse> getEvents(List<Long> productIds) {
+        log.info("이벤트 API 호출 시작 - productIds: {}", productIds);
+
         return callApi(
                 "/api/event/search-event",
                 new restRequestProductIds(productIds),

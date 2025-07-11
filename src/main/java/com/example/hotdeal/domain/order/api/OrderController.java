@@ -15,39 +15,19 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Slf4j
 @AllArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/orders")
 public class OrderController {
     private final OrderService orderService;
 
-    // 기존 방식 제품 추가
-    @PostMapping("/orders/v1")
-    public ResponseEntity<OrderResponseDto> addOrderItems(@AuthenticationPrincipal AuthUserDto user,
-                                                          @Valid @RequestBody OrderRequestDto requestDto) {
-
-        OrderResponseDto responseDto = orderService.addOrder(user.getId(), requestDto);
-
-        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
-    }
-
-    // RestTemplate 적용한 제품 추가
-    @PostMapping("/orders/v2")
-    public ResponseEntity<OrderItemResponseDto> addOrderItemsV1(@AuthenticationPrincipal AuthUserDto user,
-                                                                @Valid @RequestBody AddOrderItemRequestDto requestDto) {
-
-        OrderItemResponseDto responseDto = orderService.addOrderV1(user.getId(), requestDto);
-
-        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
-    }
-
-
-    @PostMapping("/orders/v0")
-    public ResponseEntity<OrderItemResponseDto> addOrderItemsV0(
+    @PostMapping("/products")
+    public ResponseEntity<OrderItemResponseDto> addOrderItems(
             @AuthenticationPrincipal AuthUserDto user,
-            @Valid @RequestBody AddOrderItemRequestDto requestDto
-    ) {
-        OrderItemResponseDto responseDto = orderService.addOrderV0(user.getId(), requestDto);
+            @Valid @RequestBody AddOrderItemRequestDto requestDto) {
+
+        OrderItemResponseDto responseDto = orderService.addOrder(user.getId(), requestDto);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
+
     // 주문 삭제
     @PutMapping("/orders/{orderId}")
     public ResponseEntity<String> orderCancel(@PathVariable Long orderId){
@@ -65,4 +45,23 @@ public class OrderController {
 
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
+
+//    // 기존 방식 제품 추가
+//    @PostMapping("/orders/v1")
+//    public ResponseEntity<OrderResponseDto> addOrderItems(@AuthenticationPrincipal AuthUserDto user,
+//                                                          @Valid @RequestBody OrderRequestDto requestDto) {
+//
+//        OrderResponseDto responseDto = orderService.addOrder(user.getId(), requestDto);
+//
+//        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+//    }
+
+//    @PostMapping("/orders/v0")
+//    public ResponseEntity<OrderItemResponseDto> addOrderItemsV0(
+//            @AuthenticationPrincipal AuthUserDto user,
+//            @Valid @RequestBody AddOrderItemRequestDto requestDto
+//    ) {
+//        OrderItemResponseDto responseDto = orderService.addOrderV0(user.getId(), requestDto);
+//        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+//    }
 }
