@@ -39,7 +39,7 @@ public class Order extends BaseEntity {
     private OrderStatus orderStatus = OrderStatus.ORDER_BEFORE;
 
     @Column(name = "order_time")
-    private LocalDateTime orderTime;
+    private final LocalDateTime orderTime = LocalDateTime.now();
 
     public Order() {}
 
