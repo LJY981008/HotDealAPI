@@ -1,27 +1,18 @@
-package com.example.hotdeal.domain.product.notification.application;
+package com.example.hotdeal.domain.notification.application;
 
 import com.example.hotdeal.domain.common.client.product.NotificationApiClient;
-import com.example.hotdeal.domain.product.notification.domain.ListenProductEvent;
-import com.example.hotdeal.domain.product.notification.domain.Notification;
-import com.example.hotdeal.domain.product.notification.infra.NotificationRepository;
-import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
+import com.example.hotdeal.domain.notification.domain.ListenProductEvent;
+import com.example.hotdeal.domain.notification.domain.Notification;
+import com.example.hotdeal.domain.notification.infra.NotificationRepository;
 import com.example.hotdeal.domain.user.subscribe.domain.SubscribeResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service

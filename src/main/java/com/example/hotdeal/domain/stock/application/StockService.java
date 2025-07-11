@@ -1,5 +1,6 @@
 package com.example.hotdeal.domain.stock.application;
 
+import com.example.hotdeal.domain.common.client.product.ProductApiClient;
 import com.example.hotdeal.domain.stock.domain.Stock;
 import com.example.hotdeal.domain.common.client.stock.dto.StockResponse;
 import com.example.hotdeal.domain.stock.infra.StockRepository;
@@ -22,6 +23,7 @@ public class StockService {
     //private final LockService lockService;
     private final RedissonLockService lockService;
     private final StockTransactionService stockTransactionService;
+    private final ProductApiClient productApiClient;
 
     // 여러 상품의 재고 조회
     @Transactional(readOnly = true)
@@ -56,6 +58,69 @@ public class StockService {
                 .orElse(false);
     }
 
+    // 재고 증가 (관리자용) - 상품 검증 추가
+    @Transactional
+    public StockResponse increaseStock(Long productId, int quantity) {
+        // 1. 상품 존재 여부 검증
+        validateProductExists(productId);
+
+        // 2. 재고 조회 또는 생성
+        Stock stock = repository.findByProductId(productId)
+                .orElseGet(() -> {
+                    log.info("새로운 재고 생성 - 상품ID: {}", productId);
+                    return repository.save(new Stock(productId, 0));
+                });
+
+        // 3. 재고 증가
+        stock.increase(quantity);
+        log.info("재고 증가 완료 - 상품ID: {}, 증가량: {}, 현재 재고: {}",
+                productId, quantity, stock.getQuantity());
+
+        return new StockResponse(stock);
+    }
+
+    // 재고 초기화 (관리자용) - 상품 검증 추가
+    @Transactional
+    public StockResponse resetStock(Long productId, int quantity) {
+        // 1. 상품 존재 여부 검증
+        validateProductExists(productId);
+
+        // 2. 재고 조회 또는 생성
+        Stock stock = repository.findByProductId(productId)
+                .orElseGet(() -> {
+                    log.info("새로운 재고 생성 - 상품ID: {}", productId);
+                    return repository.save(new Stock(productId, 0));
+                });
+
+        // 3. 재고 초기화
+        stock.reset(quantity);
+        log.info("재고 초기화 완료 - 상품ID: {}, 설정 재고: {}", productId, quantity);
+
+        return new StockResponse(stock);
+    }
+
+    private void validateProductExists(Long productId) {
+        try {
+            productApiClient.getProduct(productId);
+            log.debug("상품 검증 완료 - 상품ID: {}", productId);
+        } catch (Exception e) {
+            log.error("상품 검증 실패 - 상품ID: {}, 에러: {}", productId, e.getMessage());
+            throw new IllegalArgumentException("존재하지 않는 상품입니다: " + productId);
+        }
+    }
+
+    // @Transactional 제거 - Lock 밖에서 트랜잭션이 시작되면 안됨
+    public void decreaseWithLock(Long stockId, int quantity) {
+        String lockKey = String.valueOf(stockId);
+        lockService.executeWithLock(lockKey, () -> {
+            // Lock 내부에서 새로운 트랜잭션 시작
+            stockTransactionService.decreaseInNewTransaction(stockId, quantity);
+            return null;
+        });
+    }
+
+    // 기존 메서드들 (테스트용)
+
     // 재고 증가 (관리자용)
     @Transactional
     public void increase(Long stockId, int qty) {
@@ -84,16 +149,6 @@ public class StockService {
         Stock stock = repository.findById(stockId).orElseThrow();
         stock.decrease(quantity);   // dirty checking 후 flush
     }
-
-    // @Transactional 제거 - Lock 밖에서 트랜잭션이 시작되면 안됨
-    public void decreaseWithLock(Long stockId, int quantity) {
-       String lockKey = String.valueOf(stockId);
-       lockService.executeWithLock(lockKey, () -> {
-           // Lock 내부에서 새로운 트랜잭션 시작
-          stockTransactionService.decreaseInNewTransaction(stockId, quantity);
-          return null;
-       });
-   }
 
    //Mysql 행 락 사용
    @Transactional

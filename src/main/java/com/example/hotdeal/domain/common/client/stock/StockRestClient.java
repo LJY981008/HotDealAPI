@@ -49,7 +49,7 @@ public class StockRestClient {
             );
 
             log.info("재고 조회 성공 - 요청 상품 수: {}, 응답 수: {}",
-                    productIds.size(), response.getBody().size());
+                    productIds.size(), Objects.requireNonNull(response.getBody()).size());
 
             return response.getBody();
         } catch (Exception e) {
@@ -65,58 +65,16 @@ public class StockRestClient {
      */
     public StockResponse getStock(Long productId) {
         try {
-            URI uri = UriComponentsBuilder
-                    .fromUriString(BASE_URL)
-                    .path(STOCK_API_PATH + "/product/{productId}")
-                    .buildAndExpand(productId)
-                    .toUri();
-
-            ResponseEntity<StockResponse> response = restTemplate.exchange(
-                    uri,
-                    HttpMethod.GET,
-                    null,
-                    StockResponse.class
-            );
+            String url = BASE_URL + STOCK_API_PATH + "/" + productId;
+            StockResponse response = restTemplate.getForObject(url, StockResponse.class);
 
             log.info("단일 재고 조회 성공 - productId: {}, 재고: {}",
-                    productId, Objects.requireNonNull(response.getBody()).getQuantity());
+                    productId, Objects.requireNonNull(response).getQuantity());
 
-            return response.getBody();
+            return response;
         } catch (Exception e) {
             log.error("단일 재고 조회 실패 - productId: {}, error: {}", productId, e.getMessage());
             throw new RuntimeException("재고 조회 중 오류 발생", e);
         }
-    }
-
-    /**
-     * 재고 충분 여부 확인
-     * @param productId 상품 ID
-     * @param requiredQuantity 필요 수량
-     * @return 재고 충분 여부
-     */
-    public boolean hasEnoughStock(Long productId, int requiredQuantity) {
-        try {
-            StockResponse stock = getStock(productId);
-            return stock.getQuantity() >= requiredQuantity;
-        } catch (Exception e) {
-            log.error("재고 확인 실패 - productId: {}, required: {}", productId, requiredQuantity);
-            return false;
-        }
-    }
-
-    /**
-     * 여러 상품의 재고 충분 여부 확인
-     * @param productQuantityMap 상품 ID-수량 맵
-     * @return 모든 상품의 재고가 충분한지 여부
-     */
-    public boolean hasEnoughStockForAll(java.util.Map<Long, Integer> productQuantityMap) {
-        List<Long> productIds = new java.util.ArrayList<>(productQuantityMap.keySet());
-        List<StockResponse> stocks = searchStocks(productIds);
-
-        return stocks.stream()
-                .allMatch(stock -> {
-                    Integer required = productQuantityMap.get(stock.getProductId());
-                    return required != null && stock.getQuantity() >= required;
-                });
     }
 }
