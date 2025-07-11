@@ -32,7 +32,6 @@ public class StockService {
                 .map(productId -> repository.findByProductId(productId)
                         .orElseGet(() -> {
                             log.warn("재고 정보 없음 - 상품ID: {}", productId);
-                            // 재고가 없는 경우 0으로 초기화된 재고 정보 반환
                             return new Stock(productId, 0);
                         }))
                 .map(StockResponse::new)
