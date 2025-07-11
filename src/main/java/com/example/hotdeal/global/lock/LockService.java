@@ -18,12 +18,16 @@ public class LockService {
     private final LockRedisRepository lockRedisRepository;
 
 
-    // 기본 락 타임아웃: 3초
-    private static final Duration DEFAULT_LOCK_TIMEOUT = Duration.ofSeconds(3);
-    // 락 획득 재시도 간격: 100ms
-    private static final long RETRY_INTERVAL_MS = 100;
-    // 최대 재시도 시간: 10초
-    private static final Duration MAX_RETRY_DURATION = Duration.ofSeconds(10);
+    // 기본 락 타임아웃: 100 ms
+    private static final Duration DEFAULT_LOCK_TIMEOUT = Duration.ofMillis(100);
+    // 락 획득 재시도 간격: 50ms
+    private static final long RETRY_INTERVAL_MS = 50;
+
+    // 최대 대기 시간
+    private static final Duration MAX_RETRY_DURATION = Duration.ofSeconds(4);
+
+    //최대 시도 횟수
+    private static final int  MAX_RETRY_COUNT   = 80;   // 50ms × 80 = 4s
 
     /**
      * 락을 획득하고 작업을 실행
@@ -64,23 +68,27 @@ public class LockService {
      * 락 획득 시도 (재시도 로직 포함)
      */
     private boolean acquireLock(String key, String value, Duration lockTimeout) {
-        long startTime = System.currentTimeMillis();
-        long maxRetryTime = MAX_RETRY_DURATION.toMillis();
+        long deadline = System.currentTimeMillis() +  MAX_RETRY_DURATION.toMillis();
+        int attempts  = 0;
 
-        while (System.currentTimeMillis() - startTime < maxRetryTime) {
-            Boolean acquired = lockRedisRepository.tryLock(key, value, lockTimeout);
-            if (Boolean.TRUE.equals(acquired)) {
+
+        while (attempts < MAX_RETRY_COUNT && System.currentTimeMillis() < deadline) {
+            attempts++;
+
+            if (Boolean.TRUE.equals(lockRedisRepository.tryLock(key, value, lockTimeout))) {
+                log.debug("Lock acquired after {} attempts in {} ms",
+                        attempts,
+                        System.currentTimeMillis() - (deadline - MAX_RETRY_DURATION.toMillis()));
                 return true;
             }
 
-            try {
-                Thread.sleep(RETRY_INTERVAL_MS);
-            } catch (InterruptedException e) {
+            try { Thread.sleep(RETRY_INTERVAL_MS); }
+            catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                return false;
-            }
+                return false; }
         }
-
+        log.warn("Give-up: attempts={}, elapsed={} ms",
+                attempts, MAX_RETRY_DURATION.toMillis() - (deadline - System.currentTimeMillis()));
         return false;
     }
 

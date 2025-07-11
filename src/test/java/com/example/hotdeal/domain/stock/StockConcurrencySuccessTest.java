@@ -60,7 +60,8 @@ class StockConcurrencySuccessTest {
     void should_success_when_1000_threads_decrease_with_lock() throws InterruptedException {
 
         int threadCnt = 1_000;
-        ExecutorService pool = Executors.newFixedThreadPool(128);
+        System.out.println("Runtime.getRuntime().availableProcessors() = " + Runtime.getRuntime().availableProcessors());
+        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
         CountDownLatch latch = new CountDownLatch(threadCnt);
 
         for (int i = 0; i < threadCnt; i++) {
