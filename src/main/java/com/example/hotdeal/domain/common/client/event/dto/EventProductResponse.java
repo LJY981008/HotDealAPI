@@ -4,11 +4,13 @@ import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.domain.entity.EventItem;
 import com.example.hotdeal.domain.event.enums.EventType;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
+@NoArgsConstructor
 public class EventProductResponse {
     private Long eventId;
     private Long productId;
