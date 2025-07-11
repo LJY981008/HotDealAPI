@@ -1,8 +1,8 @@
 package com.example.hotdeal.domain.event.api;
 
+import com.example.hotdeal.domain.common.client.event.dto.EventProductResponse;
 import com.example.hotdeal.domain.event.application.EventService;
 import com.example.hotdeal.domain.event.domain.dto.*;
-import com.example.hotdeal.domain.event.domain.entity.Event;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

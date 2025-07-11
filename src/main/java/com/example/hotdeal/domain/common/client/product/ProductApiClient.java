@@ -14,7 +14,7 @@ public class ProductApiClient {
 
     public ProductApiClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.PRODUCT_API_BASE_URL = "    \"http://localhost:8080/api/products\"";
+        this.PRODUCT_API_BASE_URL = "http://localhost:8080/api/products";
     }
 
     /**
