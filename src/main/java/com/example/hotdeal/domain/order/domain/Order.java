@@ -23,6 +23,9 @@ public class Order extends BaseEntity {
 
     private Long userId;
 
+    @Column(name = "order_total_count")
+    private Integer orderTotalCount;
+
     @Column(name = "order_total_price")
     private BigDecimal orderTotalPrice;
 
@@ -36,18 +39,23 @@ public class Order extends BaseEntity {
     private OrderStatus orderStatus = OrderStatus.ORDER_BEFORE;
 
     @Column(name = "order_time")
-    private LocalDateTime orderTime;
+    private final LocalDateTime orderTime = LocalDateTime.now();
 
     public Order() {}
 
-    public void addOrderItem(OrderItem orderItem) {
-        this.orderItems.add(orderItem);
-        orderItem.setOrder(this);
+    public void assignOrderItems(List<OrderItem> orderItems) {
+        orderItems.forEach(item -> {
+            item.setOrder(this);
+            this.orderItems.add(item);
+        });
     }
 
+
     public Order(Long userId,
-                 BigDecimal orderTotalPrice) {
+                 BigDecimal orderTotalPrice,
+                 Integer orderTotalCount) {
         this.userId = userId;
         this.orderTotalPrice = orderTotalPrice;
+        this.orderTotalCount = orderTotalCount;
     }
 }

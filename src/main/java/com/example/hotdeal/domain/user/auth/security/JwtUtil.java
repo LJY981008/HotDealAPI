@@ -1,8 +1,9 @@
 package com.example.hotdeal.domain.user.auth.security;
 
-
-
-import com.example.hotdeal.global.constant.Const;
+import com.example.hotdeal.domain.user.auth.domain.RefreshToken;
+import com.example.hotdeal.domain.user.auth.domain.response.TokenResponse;
+import com.example.hotdeal.domain.user.auth.infra.RefreshTokenRepository;
+import com.example.hotdeal.global.constant.TokenInfo;
 import com.example.hotdeal.global.enums.UserRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -16,6 +17,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Key;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Date;
 
@@ -26,12 +29,14 @@ public class JwtUtil {
 
     private Key key;
     private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${jwt.secret.key}")
     private String secretKey;
 
     @PostConstruct
     public void init() {
+        log.info("secretKey raw: {}", secretKey);
         try {
             if (!StringUtils.hasText(secretKey)) {
                 throw new IllegalArgumentException("JWT 시크릿 키가 설정되지 않았습니다.");
@@ -43,34 +48,63 @@ public class JwtUtil {
             }
 
             key = Keys.hmacShaKeyFor(bytes);
+            log.info(String.valueOf(key));
         } catch (IllegalArgumentException e) {
             log.error("JWT 시크릿 키 초기화 실패: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "JWT 설정 오류");
         }
     }
 
-    public String createToken(Long userId, String email, UserRole userRole) {
+    public TokenResponse createTokens(Long authId, String email, UserRole userRole) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + Const.tokenValidityInMilliseconds);
+        Date accessExpiry = new Date(now.getTime() + TokenInfo.accessTokenExpireTime);
+        Date refreshExpiry = new Date(now.getTime() + TokenInfo.refreshTokenExpireTime);
 
-        return Jwts.builder()
-                        .setSubject(String.valueOf(userId))
-                        .claim("email", email)
-                        .claim("userRole", userRole)
-                        .setExpiration(expiryDate)
-                        .setIssuedAt(now)
-                        .signWith(key, signatureAlgorithm)
-                        .compact();
+        String accessToken = Jwts.builder()
+            .setSubject(String.valueOf(authId)) //유저 식별자
+            .claim("email", email) //이메일
+            .claim("userRole", userRole) //유저롤
+            .setExpiration(accessExpiry)
+            .setIssuedAt(now)
+            .signWith(key, signatureAlgorithm)
+            .compact();
+
+        String refreshToken = Jwts.builder()
+            .setSubject(String.valueOf(authId)) // 리프레시 토큰의 주인 == 유저 식별자
+            .claim("type", "refresh") //하나의 claim 넣기
+            .setExpiration(refreshExpiry) //리프레시토큰에 TTL 설정이 있기에 생략가능
+            .setIssuedAt(now)
+            .signWith(key, signatureAlgorithm)
+            .compact();
+
+        refreshTokenRepository.save(new RefreshToken(authId, refreshToken));
+
+        return TokenResponse.of(accessToken, refreshToken);
+    }
+
+    //엑세스 토큰 재발급을 위한 메서드
+    public String createAccessToken(Long authId, String email, UserRole userRole) {
+        Date now = new Date();
+        Date accessExpiry = new Date(now.getTime() + TokenInfo.accessTokenExpireTime);
+
+		return Jwts.builder()
+			.setSubject(String.valueOf(authId))
+			.claim("email", email)
+			.claim("userRole", userRole)
+			.setExpiration(accessExpiry)
+			.setIssuedAt(now)
+			.signWith(key, signatureAlgorithm)
+			.compact();
     }
 
     public String substringToken(String tokenValue) {
         if (!StringUtils.hasText(tokenValue)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "토큰이 존재하지 않습니다.");
         }
-        if (!tokenValue.startsWith(Const.tokenPrefix)) {
+        if (!tokenValue.startsWith(TokenInfo.tokenPrefix)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "잘못된 토큰 형식입니다.");
         }
-        return tokenValue.replace(Const.tokenPrefix, "");
+        return tokenValue.substring(TokenInfo.tokenPrefix.length());
     }
 
     public Claims extractClaims(String token) {
@@ -115,5 +149,13 @@ public class JwtUtil {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이메일 정보가 없습니다.");
         }
         return userEmail;
+    }
+
+    public LocalDateTime getExpiredAt(String token) {
+        Date expiration = extractClaims(token).getExpiration();
+        return expiration
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime();
     }
 }

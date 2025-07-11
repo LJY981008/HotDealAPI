@@ -1,12 +1,13 @@
 package com.example.hotdeal.domain.order.domain;
 
+
 import com.example.hotdeal.global.model.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.math.BigDecimal;
+
 
 @Entity
 @Getter
@@ -43,4 +44,5 @@ public class OrderItem extends BaseEntity {
         this.orderItemCount = orderItemCount;
         this.itemTotalPrice = itemTotalPrice;
     }
+
 }

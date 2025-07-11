@@ -1,12 +1,9 @@
 package com.example.hotdeal.domain.order.application.dto;
 
-
 import com.example.hotdeal.domain.order.enums.OrderStatus;
 import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
-
 
 @Getter
 public class OrderResponseDto {
@@ -29,4 +26,6 @@ public class OrderResponseDto {
         this.orderDate = orderDate;
         this.status = status;
     }
+
+
 }
