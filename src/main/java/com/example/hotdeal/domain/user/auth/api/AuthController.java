@@ -91,7 +91,7 @@ public class AuthController {
 		@RequestParam Long authId
 	) {
 		authService.restoreDeleteUser(authId);
-		return ResponseEntity.status(HttpStatus.OK).body(null);
+		return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.of(null, "정상적으로 복구되었습니다."));
 	}
 
 }
