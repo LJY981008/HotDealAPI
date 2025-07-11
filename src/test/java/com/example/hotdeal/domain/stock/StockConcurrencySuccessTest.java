@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.GenericContainer;
@@ -30,6 +31,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Testcontainers
 @Import({RedisConfig.class, LockRedisRepository.class, LockService.class})
+@TestPropertySource(properties = {
+        "redis.host=localhost",
+        "redis.port=6379"
+})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class StockConcurrencySuccessTest {
 
@@ -60,7 +65,8 @@ class StockConcurrencySuccessTest {
     void should_success_when_1000_threads_decrease_with_lock() throws InterruptedException {
 
         int threadCnt = 1_000;
-        ExecutorService pool = Executors.newFixedThreadPool(128);
+        System.out.println("Runtime.getRuntime().availableProcessors() = " + Runtime.getRuntime().availableProcessors());
+        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
         CountDownLatch latch = new CountDownLatch(threadCnt);
 
         for (int i = 0; i < threadCnt; i++) {
