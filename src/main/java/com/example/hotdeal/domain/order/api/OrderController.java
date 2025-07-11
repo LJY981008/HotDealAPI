@@ -1,10 +1,7 @@
 package com.example.hotdeal.domain.order.api;
 
 import com.example.hotdeal.domain.order.application.Service.OrderService;
-import com.example.hotdeal.domain.order.application.dto.AddOrderItemRequestDto;
-import com.example.hotdeal.domain.order.application.dto.OrderItemResponseDto;
-import com.example.hotdeal.domain.order.application.dto.OrderRequestDto;
-import com.example.hotdeal.domain.order.application.dto.OrderResponseDto;
+import com.example.hotdeal.domain.order.application.dto.*;
 import com.example.hotdeal.domain.user.auth.domain.AuthUserDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -53,10 +50,19 @@ public class OrderController {
     }
     // 주문 삭제
     @PutMapping("/orders/{orderId}")
-    public ResponseEntity<Void> orderCancel(@PathVariable Long orderId){
+    public ResponseEntity<String> orderCancel(@PathVariable Long orderId){
 
-        orderService.orderCancel(orderId);
+        String cancel = orderService.orderCancel(orderId);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(cancel);
+    }
+
+    // 주문 조회
+    @GetMapping("/orders/{orderId}")
+    public ResponseEntity<OrderItemResponseDto> searchOrder(@PathVariable Long orderId){
+
+        OrderItemResponseDto responseDto = orderService.searchOrder(orderId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 }
