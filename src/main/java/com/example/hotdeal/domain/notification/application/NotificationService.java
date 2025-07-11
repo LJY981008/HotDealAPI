@@ -1,12 +1,15 @@
-package com.example.hotdeal.domain.notification.application;
+package com.example.hotdeal.domain.product.notification.application;
 
-import com.example.hotdeal.domain.notification.domain.ListenProductEvent;
-import com.example.hotdeal.domain.notification.domain.Notification;
-import com.example.hotdeal.domain.notification.infra.NotificationRepository;
+import com.example.hotdeal.domain.common.client.product.NotificationApiClient;
+import com.example.hotdeal.domain.product.notification.domain.ListenProductEvent;
+import com.example.hotdeal.domain.product.notification.domain.Notification;
+import com.example.hotdeal.domain.product.notification.infra.NotificationRepository;
+import com.example.hotdeal.domain.product.product.domain.dto.SearchProductResponse;
 import com.example.hotdeal.domain.user.subscribe.domain.SubscribeResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,6 +21,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,7 +30,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final SimpMessagingTemplate messagingTemplate;
-    private final RestTemplate restTemplate;
+    private final NotificationApiClient apiClient;
 
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -38,7 +42,7 @@ public class NotificationService {
         String notificationMessages = notification.getNotification_message();
 
         Long productId = listenProductEvent.getProductId();
-        List<SubscribeResponse> subscribeResponses = searchUserFromSubscribeToProduct(productId);
+        List<SubscribeResponse> subscribeResponses = apiClient.searchUserFromSubscribeToProduct(productId);
 
         log.info("웹소켓 메시지 전송 시작: {}", notificationMessages);
 
@@ -59,21 +63,4 @@ public class NotificationService {
         }
     }
 
-    private List<SubscribeResponse> searchUserFromSubscribeToProduct(Long productId) {
-        URI uri = UriComponentsBuilder
-                .fromUriString("http://localhost:8080")
-                .path("/api/products/search-product")
-                .queryParam("productId", productId)
-                .encode()
-                .build()
-                .toUri();
-
-        ResponseEntity<List<SubscribeResponse>> response = restTemplate.exchange(
-                uri,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<SubscribeResponse>>() {}
-        );
-        return response.getBody();
-    }
 }

@@ -34,6 +34,7 @@ public class StockController {
         StockResponse stock = service.getStockByProductId(productId);
         return ResponseEntity.ok(stock);
     }
+
     //재고 차감
     @PostMapping("/{id}/decrease")
     public void decrease(@PathVariable Long id,
