@@ -1,6 +1,7 @@
 package com.example.hotdeal.domain.event.application;
 
-import com.example.hotdeal.domain.common.client.product.HotDealApiClient;
+import com.example.hotdeal.domain.common.client.event.HotDealApiClient;
+import com.example.hotdeal.domain.common.client.event.dto.EventProductResponse;
 import com.example.hotdeal.domain.event.domain.dto.*;
 import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.domain.entity.EventItem;

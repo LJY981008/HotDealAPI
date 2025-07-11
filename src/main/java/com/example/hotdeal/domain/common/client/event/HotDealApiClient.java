@@ -1,6 +1,6 @@
-package com.example.hotdeal.domain.common.client.product;
+package com.example.hotdeal.domain.common.client.event;
 
-import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
+import com.example.hotdeal.domain.common.client.event.dto.EventProductResponse;
 import com.example.hotdeal.domain.common.client.product.dto.SearchProductResponse;
 import com.example.hotdeal.global.enums.CustomErrorCode;
 import com.example.hotdeal.global.exception.CustomException;
@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -37,11 +38,37 @@ public class HotDealApiClient {
     }
 
     public List<EventProductResponse> getEvents(List<Long> productIds) {
-        return callApi(
-                "/api/event/search-event",
-                new restRequestProductIds(productIds),
-                new ParameterizedTypeReference<List<EventProductResponse>>() {}
-        );
+        try {
+            log.info("🔍 이벤트 API 호출 시작 - productIds: {}", productIds);
+
+            URI uri = UriComponentsBuilder
+                    .fromUriString(baseUrl)
+                    .path("/api/event/search-event")
+                    .encode()
+                    .build()
+                    .toUri();
+
+            restRequestProductIds request = new restRequestProductIds(productIds);
+
+            log.info("요청 URL: {}", uri);
+            log.info("요청 Body: {}", request);
+
+            ResponseEntity<String> rawResponse = restTemplate.exchange(
+                    uri,
+                    HttpMethod.POST,
+                    new HttpEntity<>(request),
+                    String.class
+            );
+
+            log.info("응답 상태: {}", rawResponse.getStatusCode());
+            log.info("응답 헤더: {}", rawResponse.getHeaders());
+            log.info("응답 Body: {}", rawResponse.getBody());
+
+        } catch (Exception e) {
+            log.error("이벤트 API 호출 실패: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
+        return List.of();
     }
 
     private <T, R> R callApi(
