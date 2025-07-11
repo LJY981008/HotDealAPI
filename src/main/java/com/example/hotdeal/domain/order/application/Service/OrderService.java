@@ -1,5 +1,6 @@
 package com.example.hotdeal.domain.order.application.Service;
 
+import com.example.hotdeal.domain.common.client.product.HotDealApiClient;
 import com.example.hotdeal.domain.event.domain.dto.EventProductResponse;
 import com.example.hotdeal.domain.event.domain.dto.SearchEventToProductIdRequest;
 import com.example.hotdeal.domain.order.application.dto.*;
@@ -38,10 +39,11 @@ public class OrderService {
     private final ApplicationEventPublisher eventPublisher;
     private final OrderRepository orderRepository;
     private final ProductRepositoryImpl productRepositoryImpl;
+    private final HotDealApiClient apiClient;
 
     /*
-     * 기존에 하던 Product에 연관관계 맺어서 가져오는 방법
-     */
+    * 기존에 하던 Product에 연관관계 맺어서 가져오는 방법
+    */
     @Transactional
     public OrderResponseDto addOrder(Long userId, OrderRequestDto requestDto) {
 
@@ -95,9 +97,11 @@ public class OrderService {
             counts.add(item.getQuantity());
         }
 
-        List<SearchProductResponse> searchProductResponses = productSearch(productIds);
-        List<OrderItemDto> product = searchProductResponses.stream()
-                .map(response -> new OrderItemDto(response.getProductId(),
+//        List<SearchProductResponse> searchProductResponses = productSearch(productIds);
+//        List<OrderItemDto> product = searchProductResponses.stream()
+//                .map(response -> new OrderItemDto(response.getProductId(),
+        List<SearchProductResponse> searchProductResponses = apiClient.getProducts(productIds);
+        List<OrderItemDto> product = searchProductResponses.stream().map(response -> new OrderItemDto(response.getProductId(),
                         response.getProductName(),
                         response.getOriginalPrice()))
                 .toList();
@@ -157,13 +161,15 @@ public class OrderService {
         }
 
         // 프로덕트 정보
-        List<OrderItemDto> products = productSearch(productIds).stream()
+        List<OrderItemDto> products = apiClient.getProducts(productIds).stream()
                 .map(searchProduct ->
                         new OrderItemDto(searchProduct.getProductId(), searchProduct.getProductName(), searchProduct.getOriginalPrice())
                 ).toList();
 
         // 이벤트 정보
 //        List<EventProductResponse> events = eventSearch(productIds).stream().toList();
+        List<EventProductResponse> events = apiClient.getEvents(productIds);
+
 
         // 프로덕트 재고
 
