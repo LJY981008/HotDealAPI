@@ -1,5 +1,6 @@
 package com.example.hotdeal.domain.user.subscribe.api;
 
+import com.example.hotdeal.domain.user.auth.domain.AuthUserDto;
 import com.example.hotdeal.domain.user.subscribe.application.SubscribeService;
 
 import com.example.hotdeal.domain.user.subscribe.domain.SubscribeRequest;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,9 +23,10 @@ public class SubscribeController {
 
     @PostMapping("/sub-product")
     public ResponseEntity<List<SubscribeResponse>> createSubscribe(
-        @Valid @RequestBody SubscribeRequest request
+        @Valid @RequestBody SubscribeRequest request,
+        @AuthenticationPrincipal AuthUserDto user
     ){
-        List<SubscribeResponse> subscribeResponses = subscribeService.subscribeProduct(request.getUserId(), request.getProductIds());
+        List<SubscribeResponse> subscribeResponses = subscribeService.subscribeProduct(user.getId(), request.getProductIds());
         return ResponseEntity.status(HttpStatus.CREATED).body(subscribeResponses);
     }
 
