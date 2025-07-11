@@ -26,9 +26,11 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false
 
+
 jwt:
   secret:
     key: ${SECRET_KEY}
+
 
   redis:
     host: ${REDIS_HOST:localhost}
