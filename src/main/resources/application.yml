@@ -26,13 +26,28 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false
 
-
-
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
-
 jwt:
   secret:
     key: ${SECRET_KEY}
+
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 10
+        min-idle: 5
+        max-wait: -1ms
+
+# Redisson 설정
+redisson:
+  address: redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}
+  password: ${REDIS_PASSWORD:}
+  connection-pool-size: 64
+  connection-minimum-idle-size: 24
+  timeout: 3000
+  retry-attempts: 3
+  retry-interval: 1500
