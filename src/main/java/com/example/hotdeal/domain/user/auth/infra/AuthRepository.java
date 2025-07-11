@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface AuthRepository extends JpaRepository<Auth, Long> {
 
     boolean existsByEmail(String email);
+    void deleteByAuthId(Long authId);
 
     Optional<Auth> findByEmailAndDeletedFalse(String email);
     Optional<Auth> findByAuthIdAndDeletedFalse(Long authId);
