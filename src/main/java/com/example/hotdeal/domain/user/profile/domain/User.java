@@ -1,29 +1,35 @@
 package com.example.hotdeal.domain.user.profile.domain;
 
-import com.example.hotdeal.global.enums.UserRole;
-import com.example.hotdeal.global.model.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Getter;
+import java.time.LocalDateTime;
 
+import com.example.hotdeal.global.enums.UserRole;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+//물리적 삭제 Auth 복구시 이벤트로 재생성
 @Entity
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")
-public class User extends BaseEntity {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long user_id;
+public class User {
+
+    //authId를 저장
+    @Id
+    private Long userId;
 
     @Column(unique = true, nullable = false)
     private String email;
+    @Column(nullable = false)
     private String name;
-    private String password;
-    private UserRole role;
-
-    public User(String email, String name, String password) {
-        this.email = email;
-        this.name = name;
-        this.password = password;
-        this.role = UserRole.USER;
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+    
+    public static User fromUserEvent(Long userId, String email, String name, LocalDateTime createdAt){
+        return new User(userId, email, name, createdAt);
     }
 
-    public User() {}
 }

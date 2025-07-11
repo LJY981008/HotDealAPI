@@ -10,6 +10,9 @@ public enum CustomErrorCode {
     NOT_FOUND_EVENT(HttpStatus.NOT_FOUND, "진행중인 이벤트가 아닙니다."),
     NOT_FOUND_ORDER(HttpStatus.NOT_FOUND, "주문목록이 없습니다."),
     NOT_FOUND_PRODUCT(HttpStatus.NOT_FOUND, "제품이 없습니다."),
+    NOT_FOUND_TOKEN(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않거나 만료된 토큰입니다."),
+    TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "저장된 토큰과 일치하지 않습니다."),
+    PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     FAILED_CALL_API(HttpStatus.BAD_GATEWAY, "외부 API 호출 실패"),
     ;
 
