@@ -17,6 +17,8 @@ public class Subscribe {
     @Column(name = "product_id")
     private Long productId;
 
+    protected Subscribe() {}
+
     public Subscribe(Long userId, Long productId) {
         this.userId = userId;
         this.productId = productId;
