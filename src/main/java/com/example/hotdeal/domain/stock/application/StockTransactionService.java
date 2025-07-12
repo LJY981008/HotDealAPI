@@ -5,6 +5,7 @@ import com.example.hotdeal.domain.stock.infra.StockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -14,7 +15,7 @@ class StockTransactionService {
 
     private final StockRepository repository;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void decreaseInNewTransaction(Long stockId, int quantity) {
         Stock stock = repository.findById(stockId)
                 .orElseThrow(() -> new IllegalArgumentException("재고를 찾을 수 없습니다. ID = " + stockId));
