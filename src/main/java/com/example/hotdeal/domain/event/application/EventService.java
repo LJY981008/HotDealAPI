@@ -1,6 +1,8 @@
 package com.example.hotdeal.domain.event.application;
 
-import com.example.hotdeal.domain.common.client.product.HotDealApiClient;
+import com.example.hotdeal.domain.common.client.event.HotDealApiClient;
+import com.example.hotdeal.domain.common.client.event.dto.EventProductResponse;
+import com.example.hotdeal.domain.common.client.product.ProductApiClient;
 import com.example.hotdeal.domain.event.domain.dto.*;
 import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.domain.entity.EventItem;
@@ -25,6 +27,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final HotDealApiClient apiClient;
+    private final ProductApiClient productApiClient;
 
     /**
      * 이벤트 생성
@@ -34,7 +37,7 @@ public class EventService {
     @Transactional
     public EventResponse createEvent(EventCrateRequest request) {
         Event event = eventRepository.save(request.toEvent());
-        List<SearchProductResponse> searchProductResponses = apiClient.getProducts(request.getProductIds());
+        List<SearchProductResponse> searchProductResponses = productApiClient.getProducts(request.getProductIds());
         List<EventItem> eventItems = searchProductResponses.stream().map(response -> new EventItem(response, event.getEventDiscount(), event))
                 .toList();
         event.setProducts(eventItems);
