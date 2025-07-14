@@ -107,8 +107,6 @@ com.example.hotdeal
     └── model              # 공통 모델
 ```
 
-## ERD
-
 ## API 명세
 
 
