@@ -345,4 +345,238 @@ volumes:
 - (트랜잭션 롤백 및 보상 처리)
 - Spring Event를 활용한 실패 시 보상 트랜잭션
 
+# 트러블 슈팅
+
+## 목차
+1. [도메인 간 데이터 참조 방식 설계](#1-도메인-간-데이터-참조-방식-설계)
+2. [내부 API 호출 시 인증 토큰 전달 문제](#2-내부-api-호출-시-인증-토큰-전달-문제)
+3. [HTTP 클라이언트 선택](#3-http-클라이언트-선택-resttemplate-vs-webclient)
+4. [Auth와 User 간의 데이터 일관성 문제](#4-auth와-user-간의-데이터-일관성-문제)
+5. [웹소켓 알림 시스템 최적화](#5-웹소켓-알림-시스템-최적화)
+
+---
+
+## 1. 도메인 간 데이터 참조 방식 설계
+
+### 문제 상황
+```
+도메인 간의 경계를 명확히 하는 과정에서 발생한 핵심 딜레마
+"주문 정보를 어떻게 구성할 것인가?"
+```
+
+<details>
+<summary><b>고려한 방안들</b></summary>
+
+| 방식 | 설명 | 장점 | 단점 |
+|------|------|------|------|
+| **방식 1** | 이벤트 아이템 테이블에서 모든 데이터 조회 | 단순한 조회 | 데이터 중복, 일관성 문제 |
+| **방식 2** | 도메인별 책임 분리 (상품↔이벤트) | 일관성 보장, 도메인 독립성 | 복잡한 구현 |
+
+</details>
+
+### 선택한 해결 방안
+**방식 2: 도메인별 책임 분리**
+
+```
+주문 도메인 → 상품 도메인 (기본 정보)
+           → 이벤트 도메인 (할인 정보)
+```
+
+### 선택 이유
+- **데이터 일관성 보장**: 상품 정보 변경 시 데이터 불일치 방지
+- **도메인 독립성**: 각 도메인의 책임 범위 명확화 및 의존성 최소화
+
+---
+
+## 2. 내부 API 호출 시 인증 토큰 전달 문제
+
+### 문제 상황
+```
+관리자 재고 증가 요청 → 내부 상품 검증 API 호출 → 401 인증 오류 발생
+```
+
+### 원인 분석
+```
+외부 요청: 인증됨 ✓
+내부 API 호출: 토큰 정보 없음 ✗
+```
+
+### 해결 방안: RestTemplate 인터셉터
+
+<details>
+<summary><b>구현 코드</b></summary>
+
+```java
+@Bean
+public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    return builder
+            .additionalInterceptors((request, body, execution) -> {
+                // 현재 요청의 Authorization 헤더를 복사
+                RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+                if (attrs instanceof ServletRequestAttributes) {
+                    HttpServletRequest httpRequest = ((ServletRequestAttributes) attrs).getRequest();
+                    String authHeader = httpRequest.getHeader("Authorization");
+                    if (authHeader != null) {
+                        request.getHeaders().set("Authorization", authHeader);
+                        log.debug("JWT 토큰 전달 - URL: {}", request.getURI());
+                    }
+                }
+                return execution.execute(request, body);
+            })
+            .build();
+}
+```
+
+</details>
+
+### 개선 효과
+- 내부 API 호출 시 자동 토큰 전달
+- 인증 관련 오류 완전 해결
+- 추가 설정 없이 모든 RestTemplate 요청에 적용
+
+---
+
+## 3. HTTP 클라이언트 선택 (RestTemplate vs WebClient)
+
+### 기술 선택 고민
+
+| 기술 | 장점 | 단점 |
+|------|------|------|
+| **WebClient** | 비동기/논블로킹, 고성능 | 높은 학습 곡선, 복잡한 디버깅 |
+| **RestTemplate** | 간단한 사용법, 쉬운 디버깅 | 동기 방식, 상대적 저성능 |
+
+### 선택: RestTemplate
+
+### 선택 이유
+```
+DDD 도메인 간 통신 구조를 잡아가는 상황에서는
+빠른 문제 파악과 디버깅이 성능보다 우선순위가 높다고 판단
+```
+
+---
+
+## 4. Auth와 User 간의 데이터 일관성 문제
+
+### 문제 상황
+```
+회원가입 프로세스:
+1. Auth 테이블에 데이터 저장 ✓
+2. 이벤트 발행 ✓
+3. User 테이블에 데이터 저장 ✗ (실패 가능)
+
+결과: 데이터 일관성 깨짐
+```
+
+### 해결 방안: 보상 트랜잭션 (Saga Pattern)
+
+<details>
+<summary><b>구현 구조</b></summary>
+
+```java
+@EventListener
+public void handlerUserRegisteredEvent(UserRegisteredEvent event) {
+    try {
+        User user = User.fromUserEvent(
+            event.getUserId(), 
+            event.getEmail(), 
+            event.getName(), 
+            event.getCreatedAt()
+        );
+        userRepository.save(user);
+    } catch (Exception e) {
+        // User 저장 실패 시 보상 트랜잭션 이벤트 발행
+        eventPublisher.publishEvent(
+            UserCreationFailedEvent.of(event.getUserId())
+        );
+    }
+}
+```
+
+**보상 트랜잭션 흐름:**
+```
+User 저장 실패 → UserCreationFailedEvent 발행 → Auth 데이터 롤백
+```
+
+</details>
+
+### 개선 효과
+- 데이터 일관성 보장
+- 분산 트랜잭션 환경에서의 안정성 확보
+- 실패 상황에 대한 자동 복구 메커니즘
+
+---
+
+## 5. 웹소켓 알림 시스템 최적화
+
+### 기존 방식의 문제점
+
+#### 개별 전송 방식
+```
+서버 → 구독자 1
+      → 구독자 2  
+      → 구독자 3
+      → ...
+      → 구독자 N
+```
+
+#### 발생한 문제들
+
+| 문제 | 설명 | 영향 |
+|------|------|------|
+| **연결 풀링 제한** | 동시 연결 수 한계 | 대용량 사용자 시 연결 끊김 |
+| **동기 처리 지연** | 순차적 메시지 전송 | 마지막 사용자 알림 지연 |
+
+### 고려한 해결 방안들
+- 캐싱 적용
+- 배치 처리
+- **한계**: 웹소켓 연결 풀링 제한은 근본적 해결 불가
+
+### 최종 해결 방안: 브로드캐스트 방식
+
+#### 변경된 구조
+```
+서버: 공통 알림 브로드캐스트
+클라이언트: 구독 상품 필터링 후 처리
+```
+
+<details>
+<summary><b>구현 예시</b></summary>
+
+**서버 측 (브로드캐스트)**
+```java
+@Service
+public class NotificationService {
+    public void notifyProductEvent(WSEventProduct event) {
+        // 모든 연결된 클라이언트에게 브로드캐스트
+        messagingTemplate.convertAndSend(
+            "/topic/notification", 
+            event.toNotificationMessage()
+        );
+    }
+}
+```
+
+**클라이언트 측 (필터링)**
+```javascript
+stompClient.subscribe('/topic/notification', function(message) {
+    const eventData = JSON.parse(message.body);
+    
+    // 사용자가 구독한 상품인지 확인
+    if (userSubscribedProducts.includes(eventData.productId)) {
+        displayNotification(eventData);
+    }
+});
+```
+
+</details>
+
+### 개선 효과
+
+| 개선 항목 | Before | After |
+|-----------|--------|-------|
+| **확장성** | 사용자 수에 비례한 성능 저하 | 사용자 수 무관한 일정 성능 |
+| **처리 방식** | 동기 순차 처리 | 단일 브로드캐스트 |
+| **연결 관리** | 개별 연결 관리 필요 | 단순한 연결 관리 |
+| **알림 지연** | 마지막 사용자 지연 발생 | 모든 사용자 동시 수신 |
+
 
