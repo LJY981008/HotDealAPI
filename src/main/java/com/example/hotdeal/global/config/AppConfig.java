@@ -23,20 +23,7 @@ public class AppConfig {
         return builder
                 .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
                 .additionalInterceptors((request, body, execution) -> {
-                    // 현재 요청의 Authorization 헤더를 복사해서 내부 API 호출에 전달
-                    RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
-                    if (attrs instanceof ServletRequestAttributes) {
-                        HttpServletRequest httpRequest = ((ServletRequestAttributes) attrs).getRequest();
-                        String authHeader = httpRequest.getHeader("Authorization");
-                        if (authHeader != null) {
-                            request.getHeaders().set("Authorization", authHeader);
-                            log.debug("JWT 토큰 전달 - URL: {}, Token: {}...",
-                                    request.getURI(),
-                                    authHeader.substring(0, Math.min(authHeader.length(), 20)));
-                        } else {
-                            log.debug("Authorization 헤더 없음 - URL: {}", request.getURI());
-                        }
-                    }
+                            request.getHeaders().set("X-Client-Credential", "Allowed Credential");
                     return execution.execute(request, body);
                 })
                 .build();
