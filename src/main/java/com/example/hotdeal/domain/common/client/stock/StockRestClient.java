@@ -65,7 +65,7 @@ public class StockRestClient {
      */
     public StockResponse getStock(Long productId) {
         try {
-            String url = BASE_URL + STOCK_API_PATH + "/" + productId;
+            String url = BASE_URL + STOCK_API_PATH + "/product/" + productId;
             StockResponse response = restTemplate.getForObject(url, StockResponse.class);
 
             log.info("단일 재고 조회 성공 - productId: {}, 재고: {}",

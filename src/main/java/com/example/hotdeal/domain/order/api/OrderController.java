@@ -29,7 +29,7 @@ public class OrderController {
     }
 
     // 주문 삭제
-    @PutMapping("/orders/{orderId}")
+    @PutMapping("/{orderId}")
     public ResponseEntity<String> orderCancel(@PathVariable Long orderId){
 
         String cancel = orderService.orderCancel(orderId);
@@ -38,7 +38,7 @@ public class OrderController {
     }
 
     // 주문 조회
-    @GetMapping("/orders/{orderId}")
+    @GetMapping("/{orderId}")
     public ResponseEntity<OrderItemResponseDto> searchOrder(@PathVariable Long orderId){
 
         OrderItemResponseDto responseDto = orderService.searchOrder(orderId);

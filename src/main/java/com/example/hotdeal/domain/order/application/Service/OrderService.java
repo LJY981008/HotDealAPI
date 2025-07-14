@@ -2,6 +2,7 @@ package com.example.hotdeal.domain.order.application.Service;
 
 import com.example.hotdeal.domain.common.client.event.HotDealApiClient;
 import com.example.hotdeal.domain.common.client.product.ProductApiClient;
+import com.example.hotdeal.domain.common.client.stock.StockRestClient;
 import com.example.hotdeal.domain.common.springEvent.order.OrderCreatedEvent;
 import com.example.hotdeal.domain.common.client.event.dto.EventProductResponse;
 import com.example.hotdeal.domain.order.application.dto.*;
@@ -32,7 +33,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final HotDealApiClient apiClient;
     private final ProductApiClient productApiClient;
-
+    private final StockRestClient stockRestClient;
     private final boolean orderSituation = false;
 
 
@@ -49,6 +50,14 @@ public class OrderService {
         List<SearchProductResponse> products = productApiClient.getProducts(productIds);
         if (products.isEmpty()) {
             throw new CustomException(CustomErrorCode.NOT_FOUND_PRODUCT);
+        }
+
+
+        // 남은 재고 조회
+        for(OrderRequestDto dto : requestDto.getOrderItems()){
+            if (stockRestClient.getStock(dto.getProductId()).getQuantity() - dto.getQuantity() < -1){
+                throw new CustomException(CustomErrorCode.PRODUCT_SHORTAGE);
+            }
         }
 
         // 3. 이벤트 정보 조회 (할인가) - 주석 해제하고 실제 호출
