@@ -6,5 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(staticName = "of")
 public class UserDeleteFailedEvent {
+
 	private final Long authId;
+
 }

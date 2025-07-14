@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class AdminAccountInitializer implements ApplicationRunner {
+
 	private final AuthRepository authRepository;
 	private final PasswordEncoder passwordEncoder;
 
@@ -22,7 +23,7 @@ public class AdminAccountInitializer implements ApplicationRunner {
 		String adminPassword = passwordEncoder.encode("1234");
 
 		//이미 admin 계정이 있을 시 리턴
-		if(authRepository.existsByEmail(adminEmail)) {
+		if (authRepository.existsByEmail(adminEmail)) {
 			return;
 		}
 
@@ -31,4 +32,5 @@ public class AdminAccountInitializer implements ApplicationRunner {
 
 		authRepository.save(adminAuth);
 	}
+
 }

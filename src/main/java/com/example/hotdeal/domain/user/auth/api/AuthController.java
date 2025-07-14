@@ -1,30 +1,28 @@
 package com.example.hotdeal.domain.user.auth.api;
 
-import com.example.hotdeal.domain.user.auth.application.AuthService;
-import com.example.hotdeal.domain.user.auth.domain.AuthUserDto;
-import com.example.hotdeal.domain.user.auth.domain.request.PasswordRequest;
-import com.example.hotdeal.domain.user.auth.domain.response.AccessTokenResponse;
-import com.example.hotdeal.domain.user.auth.domain.request.ReissueRequest;
-import com.example.hotdeal.domain.user.auth.domain.request.LoginRequest;
-import com.example.hotdeal.domain.user.auth.domain.request.SignupRequest;
-import com.example.hotdeal.domain.user.auth.domain.response.AuthResponse;
-import com.example.hotdeal.domain.user.auth.domain.response.TokenResponse;
-import com.example.hotdeal.domain.user.auth.domain.response.CreateUserResponse;
-import com.example.hotdeal.domain.user.auth.security.JwtUtil;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.hotdeal.domain.user.auth.application.AuthService;
+import com.example.hotdeal.domain.user.auth.domain.request.LoginRequest;
+import com.example.hotdeal.domain.user.auth.domain.request.PasswordRequest;
+import com.example.hotdeal.domain.user.auth.domain.request.ReissueRequest;
+import com.example.hotdeal.domain.user.auth.domain.request.SignupRequest;
+import com.example.hotdeal.domain.user.auth.domain.response.AccessTokenResponse;
+import com.example.hotdeal.domain.user.auth.domain.response.AuthResponse;
+import com.example.hotdeal.domain.user.auth.domain.response.CreateUserResponse;
+import com.example.hotdeal.domain.user.auth.domain.response.TokenResponse;
+import com.example.hotdeal.domain.user.auth.security.JwtUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
