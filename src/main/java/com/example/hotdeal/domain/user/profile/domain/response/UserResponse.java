@@ -8,7 +8,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(staticName = "of")
 public class UserResponse {
+
 	private final String email;
 	private final String name;
 	private final LocalDateTime createdAt;
+
 }

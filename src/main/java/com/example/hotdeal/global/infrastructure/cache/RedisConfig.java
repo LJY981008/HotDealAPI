@@ -29,7 +29,7 @@ public class RedisConfig {
 		config.setPort(port);
 
 		//비밀번호 있을시 세팅
-		if(!password.isBlank()){
+		if (!password.isBlank()) {
 			config.setPassword(RedisPassword.of(password));
 		}
 

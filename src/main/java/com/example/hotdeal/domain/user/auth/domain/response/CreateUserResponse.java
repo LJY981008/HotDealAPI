@@ -7,8 +7,8 @@ import lombok.Getter;
 @AllArgsConstructor(staticName = "of")
 public class CreateUserResponse {
 
-    private final Long authId;
-    private final String email;
-    private final String name;
+	private final Long authId;
+	private final String email;
+	private final String name;
 
 }

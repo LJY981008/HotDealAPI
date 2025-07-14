@@ -15,8 +15,6 @@ import com.example.hotdeal.domain.user.profile.event.UserDeleteFailedEvent;
 import com.example.hotdeal.domain.user.profile.event.UserRestoreFailedEvent;
 import com.example.hotdeal.domain.user.profile.event.UserSaveFailedEvent;
 import com.example.hotdeal.domain.user.profile.infra.UserRepository;
-import com.example.hotdeal.global.enums.CustomErrorCode;
-import com.example.hotdeal.global.exception.CustomException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

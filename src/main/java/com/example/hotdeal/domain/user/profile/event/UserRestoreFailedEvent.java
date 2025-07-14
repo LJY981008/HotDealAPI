@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(staticName = "of")
 public class UserRestoreFailedEvent {
+
 	private final Long authId;
 
 }

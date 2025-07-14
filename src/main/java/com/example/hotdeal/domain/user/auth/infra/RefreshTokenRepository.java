@@ -7,5 +7,4 @@ import com.example.hotdeal.domain.user.auth.domain.RefreshToken;
 
 @Repository
 public interface RefreshTokenRepository extends CrudRepository<RefreshToken, Long> {
-
 }
