@@ -14,6 +14,7 @@ public enum CustomErrorCode {
     TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "저장된 토큰과 일치하지 않습니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     FAILED_CALL_API(HttpStatus.BAD_GATEWAY, "외부 API 호출 실패"),
+    PRODUCT_SHORTAGE(HttpStatus.UNPROCESSABLE_ENTITY,"제품이 부족합니다."),
     ;
 
     private final HttpStatus httpStatus;
