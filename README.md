@@ -1,29 +1,154 @@
 #  HotDeal - 실시간 핫딜 이벤트 시스템
 
-##  목차
-- [프로젝트 소개](#프로젝트-소개)
-- [주요 기능](#주요-기능)
-- [기술 스택](#기술-스택)
-- [시스템 아키텍처](#시스템-아키텍처)
-- [프로젝트 구조](#프로젝트-구조)
-- [ERD](#erd)
-- [API 명세](#api-명세)
-- [실행 방법](#실행-방법)
-- [환경 설정](#환경-설정)
-- [주요 비즈니스 로직](#주요-비즈니스-로직)
+---
 
-## 프로젝트 소개
-HotDeal은 실시간 할인 이벤트 관리 및 주문 처리를 위한 시스템입니다. 
-- 동시성 제어를 통한 안정적인 재고 관리
-- WebSocket을 활용한 실시간 이벤트 알림
-- 도메인 간 분리와 향후 확장성을 고려해 내부 API 통신 방식 적용
+## 목차
+
+* [프로젝트 개요](#프로젝트-개요)
+* [아키텍처 및 설계](#아키텍처-및-설계)
+
+  * [도메인 주도 설계 (DDD)](#도메인-주도-설계-ddd)
+  * [HTTP 통신 방식](#http-통신-방식)
+  * [실시간 알림 구조](#실시간-알림-구조)
+  * [데이터 일관성 전략](#데이터-일관성-전략)
+* [데이터 흐름도](#데이터-흐름도)
+* [ERD](#erd)
+* [주요 기능](#주요-기능)
+* [기술 스택](#기술-스택)
+* [프로젝트 구조](#프로젝트-구조)
+* [API 명세](#api-명세)
+* [실행 방법](#실행-방법)
+* [환경 설정](#환경-설정)
+* [주요 비즈니스 로직](#주요-비즈니스-로직)
+* [트러블 슈팅](#트러블-슈팅)
+* [관련 블로그](#관련-블로그)
+
+---
+
+
+# 프로젝트 개요
+
+**HotDeal**은 실시간 할인 이벤트 관리 및 주문 처리를 위한 시스템입니다. 
+
+* 동시성 제어를 위한 **Redisson 기반 분산 락**
+* WebSocket을 활용한 실시간 이벤트 알림
+* 도메인 간 분리와 향후 확장성을 고려해 내부 API 통신 방식 적용
+
+---
+
+# 아키텍처 및 설계
+
+## 도메인 주도 설계 (DDD)
+이 프로젝트는 복잡한 비즈니스 로직을 명확하게 구조화하기 위해
+**도메인 주도 설계(DDD)**를 기반으로 전체 아키텍처를 구성했습니다.
+
+특히 가장 많은 시간과 고민을 투자한 부분은
+도메인 간의 책임을 구분하고 그 경계를 명확히 정의하는 것이었습니다.
+
+---
+
+### 도메인 주도 설계를 선택한 이유
+이벤트, 상품, 주문과 같은 도메인은 각각 독립적인 비즈니스 개념을 가지고 있으며
+이들이 교차하는 지점에서는 데이터 의존성과 변경 전파의 위험이 항상 존재합니다.
+
+이에 따라 우리는 **도메인 주도 설계(DDD)** 를 선택하였고 이를 통해 다음과 같은 효과를 얻고자 했습니다.
+
+1. 분리된 개발 환경 구축
+2. 도메인 간 책임과 역할 명확화
+3. 불필요한 변경 전파 차단
+4. 비즈니스 규칙과 흐름이 반영된 모델링
+5. 현실 업무와 유사한 구조로 협업 효율 향상
+
+---
+## HTTP 통신 방식
+이 프로젝트에서는 서버 간 통신을 위해 Spring의 `RestTemplate`을 선택했습니다.
+
+비록 RestTemplate은 레거시로 분류되며 WebClient가 공식적으로 권장되는 추세이지만
+이번 프로젝트에서는 다음과 같은 이유로 RestTemplate을 우선 도입을 결정했습니다.
+
+`RestTemplate`은 동기/블로킹 기반으로 동작하기 때문에 전체 흐름을 직관적으로 파악할 수 있어
+디버깅 및 문제 추적이 상대적으로 수월합니다.
+
+`WebClient`는 비동기/논블로킹 기반으로 고성능 처리에 적합하지만 초기 학습 비용이 크고
+예외 처리나 장애 추적에 대한 진입 장벽이 높을 수 있습니다.
+
+프로젝트 초반에는 핵심 도메인 설계 및 흐름 파악에 집중을 위해 통신 방식에 대한 복잡도는 최소화하고자 했습니다.
+향후 확장 또는 성능 최적화가 필요한 구간에서는 `WebClient`로의 전환을 고려할 수 있도록 유연한 구조로 설계하였습니다.
+
+---
+
+## 실시간 알림 구조
+이 프로젝트에서는 대량 사용자에게 안정적으로 알림을 전송할 수 있는 구조를 목표로
+실시간 알림 시스템을 설계했습니다.
+
+초기에는 서버가 제품을 구독 중인 모든 사용자에게 웹소켓을 통해 직접 알림을 푸시하는 방식이었고
+이는 소규모 트래픽 환경에서는 잘 동작했습니다.
+그러나 구독자가 많아지는 상황에서는 다음과 같은 문제점이 발생할 수 있음을 고려했습니다.
+
+- 연결 풀(pool) 한계로 인해 동시 연결 수 제한
+- 동기 처리 지연으로 인한 응답 속도 저하
+- 메모리 사용량 증가 및 GC 부하
+- 구독자 목록 조회 시점의 성능 저하
+
+---
+
+### 설계 방향과 구조적 대응
+이러한 문제를 해결하기 위해 다음과 같은 전략을 설계하고 반영했습니다.
+
+DB 측면에서는 인덱싱과 캐싱을 통해 조회 성능을 확보했고
+웹소켓 처리 로직은 배치 전송 및 병렬 처리로 부담을 분산했습니다.
+
+하지만 웹소켓 연결 수 제한은 애플리케이션 차원에서 근본적으로 해결할 수 없는 구조적 제약이었습니다.
+이에 따라 실시간 알림 구조를 클라이언트 주도 방식으로 전환하는 방향으로 재설계했습니다.
+
+---
+
+### 최종 설계 방향
+최종적으로는 다음과 같은 방식으로 알림 시스템을 구성했습니다.
+
+- 서버는 “제품에 새로운 이벤트가 등록되었음을 알리는 신호”만 전송
+- 클라이언트는 해당 신호를 수신한 뒤 필요한 알림 데이터를 직접 조회
+
+이러한 구조는 다음과 같은 장점을 가집니다.
+
+- 서버가 모든 구독자에게 직접 데이터를 전송하지 않기 때문에 웹소켓 연결 수 제한 문제를 효과적으로 회피
+- 클라이언트가 필요한 시점에 필요한 데이터만 요청하여 리소스 효율성 상승
+- 전체 시스템의 확장성과 안정성 향상
+
+---
+## 데이터 일관성 전략
+
+### 아키텍처 구조 및 데이터 흐름
+이 프로젝트는 인증 정보(Auth)와 사용자 프로필(User)을 서로 다른 목적과 책임을 가진 테이블로 분리하여 관리합니다.
+Auth는 사용자 인증에 필요한 정보를 관리하고 User는 사용자 조회 전용 데이터를 제공하는 Read Model 역할을 수행합니다.
+
+두 테이블은 도메인 이벤트 기반으로 연동되며 예를 들어 회원가입 시 Auth 저장 이후 `UserRegisteredEvent`가 발행을 통해
+이를 구독하는 리스너가 User 데이터를 생성합니다.
+
+---
+
+### 이벤트 기반 + 보상 트랜잭션 설계
+이벤트 기반 아키텍처는 비동기적이며 유연하지만 비정상적인 흐름(예: 리스너 실패)으로 인해 일부 데이터가
+누락되거나 일관성이 어긋날 가능성도 존재합니다.
+
+이를 보완하기 위해 보상 트랜잭션 패턴을 아키텍처에 포함시켰습니다.
+
+User 저장 리스너에서 예외가 발생할 경우 `UserSaveFailedEvent`를 발행해 Auth 데이터를 되돌리는 보상 로직을 실행합니다.
+
+---
+
 
 ## 데이터 흐름도
+
 <img width="1223" height="817" alt="image" src="https://github.com/user-attachments/assets/2a29716d-f63c-4937-ac6a-f0a1ef5bdd5e" />
 
+
 ## ERD
+
 <img width="3054" height="3758" alt="image" src="https://github.com/user-attachments/assets/769dff61-2482-4efb-a682-174d5a506e60" />
 
+
+---
 
 ## 주요 기능
 ### 1. 이벤트 관리
@@ -55,7 +180,7 @@ HotDeal은 실시간 할인 이벤트 관리 및 주문 처리를 위한 시스�
 
 ### Database
 - MySQL
-- Redis (캐싱 및 분산 락)
+- Redis 
 
 
 ### 기타
@@ -64,11 +189,11 @@ HotDeal은 실시간 할인 이벤트 관리 및 주문 처리를 위한 시스�
 - Lombok
 - TestContainers
 
-## 시스템 아키텍처
-
-
 
 ## 프로젝트 구조
+<details>
+<summary><b>프로젝트 구조</b></summary>
+    
 ```
 com.example.hotdeal
 ├── domain
@@ -106,216 +231,13 @@ com.example.hotdeal
     ├── lock               # 분산 락 구현
     └── model              # 공통 모델
 ```
+</details>
 
-## ERD
 
 ## API 명세
 
-
-
-## 실행 방법
-
-### 1. 필수 요구사항
-- JDK 17 이상
-- MySQL 8.0
-- Redis 6.0 이상
-- Gradle 7.x 이상
-
-### 2. 환경 준비
-
-#### 방법 1: 로컬 설치
-```bash
-# MySQL과 Redis를 로컬에 직접 설치하여 사용
-# MySQL: 3306 포트
-# Redis: 6379 포트
-```
-
-#### 방법 2: Docker 사용 (권장)
-```bash
-# 1. 프로젝트 클론
-git clone https://github.com/your-repo/hotdeal.git
-cd hotdeal
-
-# 2. .env 파일 생성
-cp .env.example .env
-# .env 파일을 열어 환경 변수 값 설정
-
-# 3. Docker Compose로 인프라 실행
-docker-compose up -d
-```
-
-### 3. 애플리케이션 실행
-```bash
-# 1. 환경 변수 설정 (터미널에서 실행하는 경우)
-export DB_SCHEME=hotdeal
-export DB_USERNAME=root
-export DB_PASSWORD=your_password
-export SECRET_KEY=your_secret_key_at_least_256_bits_long
-
-# 2. Gradle 빌드
-./gradlew clean build
-
-# 3. 애플리케이션 실행
-./gradlew bootRun
-
-# 또는 JAR 파일로 실행
-java -jar build/libs/hotdeal-0.0.1-SNAPSHOT.jar
-
-# IDE(IntelliJ IDEA 등)에서 실행하는 경우
-# Run Configuration에서 환경 변수 설정 후 실행
-```
-
-### 4. 실행 순서
-1. **인프라 환경 준비**
-   - MySQL 서버 시작 (3306 포트)
-   - Redis 서버 시작 (6379 포트)
-
-2. **환경 변수 설정**
-   - `.env` 파일 생성 및 환경 변수 설정
-   - 또는 IDE/터미널에서 환경 변수 export
-
-3. **애플리케이션 실행**
-   ```bash
-   ./gradlew bootRun
-   ```
-
-4. **초기 데이터 설정**
-   - 상품 데이터 초기화 (ProductDataInsertTest 활용 가능)
-   - 재고 데이터 설정 (각 상품별 재고 API 호출)
-   
-5. **서비스 이용**
-   - 이벤트 생성 (관리자)
-   - WebSocket 연결 (실시간 알림 수신용)
-   - 주문 처리
-
-## 환경 설정
-
-### .env 파일 (환경 변수)
-```env
-# Database
-DB_SCHEME=hotdeal
-DB_USERNAME=root
-DB_PASSWORD=your_password
-
-# JWT
-SECRET_KEY=your_secret_key_at_least_256_bits_long
-
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-```
-
-### application.yml
-```yaml
-spring:
-  application:
-    name: HotDeal
-
-  datasource:
-    url: jdbc:mysql://localhost:3306/${DB_SCHEME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 500
-      minimum-idle: 50
-      connection-timeout: 60000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      leak-detection-threshold: 60000
-
-  jpa:
-    hibernate:
-      ddl-auto: create-drop  # 운영환경에서는 validate 또는 none 사용
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
-        use_sql_comments: true
-        dialect: org.hibernate.dialect.MySQLDialect
-    open-in-view: false
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
-jwt:
-  secret:
-    key: ${SECRET_KEY}
-
-redis:
-  host: ${REDIS_HOST:localhost}
-  port: ${REDIS_PORT:6379}
-  password: ${REDIS_PASSWORD:}
-
-redisson:
-  address: redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}
-  password: ${REDIS_PASSWORD:}
-
-server:
-  port: 8080
-```
-
-### application-test.yml
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/test_db
-    username: root
-    password: 3030
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 30
-      minimum-idle: 10
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    open-in-view: false
-
-jwt:
-  secret:
-    key: dGVzdFNlY3JldEtleUZvclRlc3RpbmdQdXJwb3NlT25seTEyMzQ1Njc4OTAxMjM0NTY3ODkw
-```
-
-### docker-compose.yml (선택사항)
-Docker를 사용하여 인프라를 구성하는 경우:
-```yaml
-version: '3.8'
-services:
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_SCHEME}
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      
-  redis:
-    image: redis:6.2-alpine
-    ports:
-      - "6379:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis_data:/data
-
-volumes:
-  mysql_data:
-  redis_data:
-```
-
-# HotDeal API 명세서
-
-## 전체 API 개요
+<details>
+<summary><b>전체 API 개요</b></summary>
 
 ### 인증 (Auth) API
 | API | Method | Endpoint | 권한 | 설명 |
@@ -369,11 +291,14 @@ volumes:
 | 구독자 조회 | GET | `/api/subscribe/search-sub-user` | USER | 특정 상품 구독자 목록 조회 |
 | 구독 취소 | DELETE | `/api/subscribe/cancel-sub` | USER | 상품 구독 취소 |
 
----
+</details>
 
-## API 상세 정보
 
-## 🔐 인증 (Auth) API
+
+<details>
+<summary><b>API 상세 정보</b></summary>
+
+## 인증 (Auth) API
 
 ### 1. 회원가입
 ```
@@ -460,7 +385,7 @@ Authorization: Bearer {token}
 
 </details>
 
-### 6. 계정 복구 🔒
+### 6. 계정 복구 
 ```
 POST /api/auth/{authId}/restore
 Authorization: Bearer {token} (ADMIN 권한 필요)
@@ -475,7 +400,7 @@ Authorization: Bearer {token} (ADMIN 권한 필요)
 
 ---
 
-## 👤 사용자 (User) API
+## 사용자 (User) API
 
 ### 1. 내 정보 조회
 ```
@@ -485,7 +410,7 @@ Authorization: Bearer {token}
 
 ---
 
-## 📦 상품 (Product) API
+##  상품 (Product) API
 
 ### 1. 상품 목록 조회
 ```
@@ -510,7 +435,7 @@ GET /api/products/{productId}
 Authorization: Bearer {token}
 ```
 
-### 3. 상품 생성 🔒
+### 3. 상품 생성 
 ```
 POST /api/products
 Authorization: Bearer {token} (ADMIN 권한 필요)
@@ -531,7 +456,7 @@ Authorization: Bearer {token} (ADMIN 권한 필요)
 
 </details>
 
-### 4. 상품 수정 🔒
+### 4. 상품 수정 
 ```
 PUT /api/products/{productId}
 Authorization: Bearer {token} (ADMIN 권한 필요)
@@ -552,7 +477,7 @@ Authorization: Bearer {token} (ADMIN 권한 필요)
 
 </details>
 
-### 5. 상품 삭제 🔒
+### 5. 상품 삭제 
 ```
 DELETE /api/products/{productId}
 Authorization: Bearer {token} (ADMIN 권한 필요)
@@ -560,7 +485,7 @@ Authorization: Bearer {token} (ADMIN 권한 필요)
 
 ---
 
-## 📊 재고 (Stock) API
+##  재고 (Stock) API
 
 ### 1. 재고 목록 조회
 ```
@@ -585,13 +510,13 @@ GET /api/stocks/product/{productId}
 Authorization: Bearer {token}
 ```
 
-### 3. 재고 증가 🔒
+### 3. 재고 증가 
 ```
 POST /api/stocks/product/{productId}/increase?quantity={수량}
 Authorization: Bearer {token} (ADMIN 권한 필요)
 ```
 
-### 4. 재고 초기화 🔒
+### 4. 재고 초기화 
 ```
 POST /api/stocks/product/{productId}/reset?quantity={수량}
 Authorization: Bearer {token} (ADMIN 권한 필요)
@@ -599,9 +524,9 @@ Authorization: Bearer {token} (ADMIN 권한 필요)
 
 ---
 
-## 🎉 이벤트 (Event) API
+##  이벤트 (Event) API
 
-### 1. 이벤트 생성 🔒
+### 1. 이벤트 생성 
 ```
 POST /api/event/create
 Authorization: Bearer {token} (ADMIN 권한 필요)
@@ -641,7 +566,7 @@ Authorization: Bearer {token}
 
 ---
 
-## 🛒 주문 (Order) API
+##  주문 (Order) API
 
 ### 1. 단일 상품 주문
 ```
@@ -701,7 +626,7 @@ Authorization: Bearer {token}
 
 ---
 
-## 🔔 구독 (Subscribe) API
+##  구독 (Subscribe) API
 
 ### 1. 상품 구독
 ```
@@ -731,15 +656,13 @@ Authorization: Bearer {token}
 DELETE /api/subscribe/cancel-sub?userId={사용자ID}&productId={상품ID}
 Authorization: Bearer {token}
 ```
+</details>
 
----
-
-## 추가 정보
+<details>
+<summary><b>추가 정보</b></summary>
 
 ### 상품 카테고리
 
-<details>
-<summary><b>사용 가능한 카테고리 목록</b></summary>
 
 | 코드 | 한글명 | 코드 | 한글명 |
 |------|--------|------|--------|
@@ -753,15 +676,244 @@ Authorization: Bearer {token}
 
 </details>
 
+
+## 실행 방법
+<details>
+<summary><b>실행 방법</b></summary>
+
+### 1. 필수 요구사항
+- JDK 17 이상
+- MySQL 8.0
+- Redis 6.0 이상
+- Gradle 7.x 이상
+
+### 2. 환경 준비
+
+#### 방법 1: 로컬 설치
+```bash
+# MySQL과 Redis를 로컬에 직접 설치하여 사용
+# MySQL: 3306 포트
+# Redis: 6379 포트
+```
+
+#### 방법 2: Docker 사용 (권장)
+```bash
+# 1. 프로젝트 클론
+git clone https://github.com/your-repo/hotdeal.git
+cd hotdeal
+
+# 2. .env 파일 생성
+cp .env.example .env
+# .env 파일을 열어 환경 변수 값 설정
+
+# 3. Docker Compose로 인프라 실행
+docker-compose up -d
+```
+
+### 3. 애플리케이션 실행
+```bash
+# 1. 환경 변수 설정 (터미널에서 실행하는 경우)
+export DB_SCHEME=hotdeal
+export DB_USERNAME=root
+export DB_PASSWORD=your_password
+export SECRET_KEY=your_secret_key_at_least_256_bits_long
+
+# 2. Gradle 빌드
+./gradlew clean build
+
+# 3. 애플리케이션 실행
+./gradlew bootRun
+
+# 또는 JAR 파일로 실행
+java -jar build/libs/hotdeal-0.0.1-SNAPSHOT.jar
+
+# IDE(IntelliJ IDEA 등)에서 실행하는 경우
+# Run Configuration에서 환경 변수 설정 후 실행
+```
+
+### 4. 실행 순서
+1. **인프라 환경 준비**
+   - MySQL 서버 시작 (3306 포트)
+   - Redis 서버 시작 (6379 포트)
+
+2. **환경 변수 설정**
+   - `.env` 파일 생성 및 환경 변수 설정
+   - 또는 IDE/터미널에서 환경 변수 export
+
+3. **애플리케이션 실행**
+   ```bash
+   ./gradlew bootRun
+   ```
+
+4. **초기 데이터 설정**
+   - 상품 데이터 초기화 (ProductDataInsertTest 활용 가능)
+   - 재고 데이터 설정 (각 상품별 재고 API 호출)
+   
+5. **서비스 이용**
+   - 이벤트 생성 (관리자)
+   - WebSocket 연결 (실시간 알림 수신용)
+   - 주문 처리
+
+</details>
+
+
+## 환경 설정
+<details>
+<summary><b>환경 설정</b></summary>
+    
+### .env 파일 (환경 변수)
+
+<details>
+<summary><b>.env 파일 예시 보기</b></summary>
+
+```env
+# Database
+DB_SCHEME=hotdeal
+DB_USERNAME=root
+DB_PASSWORD=your_password
+
+# JWT
+SECRET_KEY=your_secret_key_at_least_256_bits_long
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+```
+</details>
+
+### application.yml
+
+<details>
+<summary><b>application.yml 전체 설정 보기</b></summary>
+
+```yaml
+spring:
+  application:
+    name: HotDeal
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/${DB_SCHEME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 500
+      minimum-idle: 50
+      connection-timeout: 60000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 운영환경에서는 validate 또는 none 사용
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+jwt:
+  secret:
+    key: ${SECRET_KEY}
+
+redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
+  password: ${REDIS_PASSWORD:}
+
+redisson:
+  address: redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}
+  password: ${REDIS_PASSWORD:}
+
+server:
+  port: 8080
+```
+</details>
+
+### application-test.yml
+
+<details>
+<summary><b>application-test.yml 전체 설정 보기</b></summary>
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/test_db
+    username: root
+    password: 3030
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+jwt:
+  secret:
+    key: dGVzdFNlY3JldEtleUZvclRlc3RpbmdQdXJwb3NlT25seTEyMzQ1Njc4OTAxMjM0NTY3ODkw
+```
+</details>
+
+### docker-compose.yml (선택사항)
+<details>
+<summary><b>Docker를 사용하여 인프라를 구성하는 경우</b></summary>
+    
+```yaml
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_SCHEME}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      
+  redis:
+    image: redis:6.2-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mysql_data:
+  redis_data:
+```
+</details>
+
 ### 권한 레벨
 - **PUBLIC**: 인증 없이 접근 가능
 - **USER**: 일반 사용자 권한 필요
-- **ADMIN**: 관리자 권한 필요 🔒
+- **ADMIN**: 관리자 권한 필요
 
 ### 테스트 환경
 - 테스트 실행 시 TestContainers가 자동으로 Redis 컨테이너를 생성
 - 통합 테스트에서는 실제 MySQL과 TestContainers Redis를 함께 사용
 - 테스트 프로파일(`@ActiveProfiles("test")`)로 별도 설정 적용
+  
+</details>
+
 
 ## 주요 비즈니스 로직
 
@@ -794,8 +946,10 @@ Authorization: Bearer {token}
 ### 5. 에러 처리
 - CustomException을 통한 일관된 에러 처리
 - 재고 부족, 상품 없음 등 비즈니스 예외 처리
-- (트랜잭션 롤백 및 보상 처리)
+- 트랜잭션 롤백 및 보상 처리
 - Spring Event를 활용한 실패 시 보상 트랜잭션
+
+---
 
 # 트러블 슈팅
 
@@ -1031,13 +1185,6 @@ stompClient.subscribe('/topic/notification', function(message) {
 | **연결 관리** | 개별 연결 관리 필요 | 단순한 연결 관리 |
 | **알림 지연** | 마지막 사용자 지연 발생 | 모든 사용자 동시 수신 |
 
-### 개인 블로그 링크``
-서버 → 구독자 1
-      → 구독자 2  
-      → 구독자 3
-      → ...
-      → 구독자 N
-```
 
 #### 발생한 문제들
 
@@ -1099,13 +1246,23 @@ stompClient.subscribe('/topic/notification', function(message) {
 | **연결 관리** | 개별 연결 관리 필요 | 단순한 연결 관리 |
 | **알림 지연** | 마지막 사용자 지연 발생 | 모든 사용자 동시 수신 |
 
-### 관련 기술블로그 링크
-- 차준호
-https://juno0112.tistory.com/116 : 도메인주도 설계 및 데이터 흐름 시각화하기
-https://juno0112.tistory.com/117 : 도메인 간 의존성 낮추기 : API 호출 및 스프링 이벤트 구독을 위한 Common 패키지 설계
-https://juno0112.tistory.com/118 : Spring Boot에서 RestTemplate 내부 API 호출 시 JWT 토큰 전달하기
+---
 
-- 김신영
-https://velog.io/@eggtart21/동시성-제어-구현-i193xytg
-https://velog.io/@eggtart21/동시성-제어-구현
-https://velog.io/@eggtart21/락-시간-정한-이유-공식
+### 관련 블로그
+
+차준호
+- https://juno0112.tistory.com/116 : 도메인주도 설계 및 데이터 흐름 시각화하기
+- https://juno0112.tistory.com/117 : 도메인 간 의존성 낮추기 : API 호출 및 스프링 이벤트 구독을 위한 Common 패키지 설계
+- https://juno0112.tistory.com/118 : Spring Boot에서 RestTemplate 내부 API 호출 시 JWT 토큰 전달하기
+
+
+
+김신영
+- https://velog.io/@eggtart21/동시성-제어-구현-i193xytg
+- https://velog.io/@eggtart21/동시성-제어-구현
+- https://velog.io/@eggtart21/락-시간-정한-이유-공식
+
+
+이준영
+- [https://velog.io/@eggtart21/%EB%9D%BD-%EC%8B%9C%EA%B0%84-%EC%A0%95%ED%95%9C-%EC%9D%B4%EC%9C%A0-%EA%B3%B5%EC%8B%9D](https://t-era.tistory.com/292) : 현재 웹소켓 기능의 문제점
+  
