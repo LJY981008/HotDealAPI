@@ -18,6 +18,13 @@ HotDeal은 실시간 할인 이벤트 관리 및 주문 처리를 위한 시스�
 - WebSocket을 활용한 실시간 이벤트 알림
 - 도메인 간 분리와 향후 확장성을 고려해 내부 API 통신 방식 적용
 
+## 데이터 흐름도
+<img width="1223" height="817" alt="image" src="https://github.com/user-attachments/assets/2a29716d-f63c-4937-ac6a-f0a1ef5bdd5e" />
+
+## ERD
+<img width="3054" height="3758" alt="image" src="https://github.com/user-attachments/assets/769dff61-2482-4efb-a682-174d5a506e60" />
+
+
 ## 주요 기능
 ### 1. 이벤트 관리
 - 할인 이벤트 생성 및 관리
