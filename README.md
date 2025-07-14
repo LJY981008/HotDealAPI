@@ -306,6 +306,452 @@ volumes:
   redis_data:
 ```
 
+# HotDeal API 명세서
+
+## 전체 API 개요
+
+### 인증 (Auth) API
+| API | Method | Endpoint | 권한 | 설명 |
+|-----|--------|----------|------|------|
+| 회원가입 | POST | `/api/auth/signup` | PUBLIC | 새로운 사용자 회원가입 |
+| 로그인 | POST | `/api/auth/login` | PUBLIC | 사용자 로그인 및 토큰 발급 |
+| 토큰 재발급 | POST | `/api/auth/reissue` | PUBLIC | Access Token 재발급 |
+| 로그아웃 | POST | `/api/auth/logout` | USER | 사용자 로그아웃 |
+| 회원탈퇴 | POST | `/api/auth/withdraw` | USER | 사용자 계정 비활성화 |
+| 계정 복구 | POST | `/api/auth/{authId}/restore` | ADMIN | 탈퇴한 계정 복구 |
+
+### 사용자 (User) API
+| API | Method | Endpoint | 권한 | 설명 |
+|-----|--------|----------|------|------|
+| 내 정보 조회 | GET | `/api/users/me` | USER | 현재 로그인한 사용자 정보 조회 |
+
+### 상품 (Product) API
+| API | Method | Endpoint | 권한 | 설명 |
+|-----|--------|----------|------|------|
+| 상품 목록 조회 | POST | `/api/products/search-product` | USER | 여러 상품 정보를 한 번에 조회 |
+| 단일 상품 조회 | GET | `/api/products/{productId}` | USER | 특정 상품의 상세 정보 조회 |
+| 상품 생성 | POST | `/api/products` | ADMIN | 새로운 상품 등록 |
+| 상품 수정 | PUT | `/api/products/{productId}` | ADMIN | 기존 상품 정보 수정 |
+| 상품 삭제 | DELETE | `/api/products/{productId}` | ADMIN | 상품 소프트 삭제 |
+
+### 재고 (Stock) API
+| API | Method | Endpoint | 권한 | 설명 |
+|-----|--------|----------|------|------|
+| 재고 목록 조회 | POST | `/api/stocks/search` | USER | 여러 상품의 재고 조회 |
+| 단일 재고 조회 | GET | `/api/stocks/product/{productId}` | USER | 특정 상품의 재고 조회 |
+| 재고 증가 | POST | `/api/stocks/product/{productId}/increase` | ADMIN | 상품 재고 증가 |
+| 재고 초기화 | POST | `/api/stocks/product/{productId}/reset` | ADMIN | 상품 재고 초기화 |
+
+### 이벤트 (Event) API
+| API | Method | Endpoint | 권한 | 설명 |
+|-----|--------|----------|------|------|
+| 이벤트 생성 | POST | `/api/event/create` | ADMIN | 새로운 핫딜 이벤트 생성 |
+| 이벤트 조회 | POST | `/api/event/search-event` | USER | 상품별 이벤트 정보 조회 |
+
+### 주문 (Order) API
+| API | Method | Endpoint | 권한 | 설명 |
+|-----|--------|----------|------|------|
+| 단일 상품 주문 | POST | `/api/orders/v1` | USER | 단일 상품 주문 (기존 방식) |
+| 다중 상품 주문 | POST | `/api/orders/v2` | USER | 다중 상품 주문 (RestTemplate 방식) |
+| 주문 취소 | PUT | `/api/orders/{orderId}` | USER | 기존 주문 취소 |
+| 주문 조회 | GET | `/api/orders/{orderId}` | USER | 주문 상세 정보 조회 |
+
+### 구독 (Subscribe) API
+| API | Method | Endpoint | 권한 | 설명 |
+|-----|--------|----------|------|------|
+| 상품 구독 | POST | `/api/subscribe/sub-product` | USER | 상품 알림 구독 등록 |
+| 구독자 조회 | GET | `/api/subscribe/search-sub-user` | USER | 특정 상품 구독자 목록 조회 |
+| 구독 취소 | DELETE | `/api/subscribe/cancel-sub` | USER | 상품 구독 취소 |
+
+---
+
+## API 상세 정보
+
+## 🔐 인증 (Auth) API
+
+### 1. 회원가입
+```
+POST /api/auth/signup
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "email": "user@example.com",
+  "name": "홍길동",
+  "password": "password123"
+}
+```
+
+</details>
+
+### 2. 로그인
+```
+POST /api/auth/login
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+</details>
+
+### 3. 토큰 재발급
+```
+POST /api/auth/reissue
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+</details>
+
+### 4. 로그아웃
+```
+POST /api/auth/logout
+Authorization: Bearer {token}
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "password": "password123"
+}
+```
+
+</details>
+
+### 5. 회원탈퇴
+```
+POST /api/auth/withdraw
+Authorization: Bearer {token}
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "password": "password123"
+}
+```
+
+</details>
+
+### 6. 계정 복구 🔒
+```
+POST /api/auth/{authId}/restore
+Authorization: Bearer {token} (ADMIN 권한 필요)
+```
+
+<details>
+<summary><b>Query Parameter</b></summary>
+
+- `authId`: 복구할 사용자 ID
+
+</details>
+
+---
+
+## 👤 사용자 (User) API
+
+### 1. 내 정보 조회
+```
+GET /api/users/me
+Authorization: Bearer {token}
+```
+
+---
+
+## 📦 상품 (Product) API
+
+### 1. 상품 목록 조회
+```
+POST /api/products/search-product
+Authorization: Bearer {token}
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "productIds": [1, 2, 3, 4, 5]
+}
+```
+
+</details>
+
+### 2. 단일 상품 조회
+```
+GET /api/products/{productId}
+Authorization: Bearer {token}
+```
+
+### 3. 상품 생성 🔒
+```
+POST /api/products
+Authorization: Bearer {token} (ADMIN 권한 필요)
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "productName": "Galaxy S24 Ultra",
+  "productDescription": "삼성 최신 플래그십 스마트폰",
+  "productPrice": 1600000,
+  "productImageUrl": "https://example.com/galaxy-s24.jpg",
+  "productCategory": "ELECTRONICS"
+}
+```
+
+</details>
+
+### 4. 상품 수정 🔒
+```
+PUT /api/products/{productId}
+Authorization: Bearer {token} (ADMIN 권한 필요)
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "productName": "iPhone 15 Pro Max 업데이트",
+  "productDescription": "업데이트된 상품 설명",
+  "productPrice": 1700000,
+  "productImageUrl": "https://example.com/updated-iphone15.jpg",
+  "productCategory": "ELECTRONICS"
+}
+```
+
+</details>
+
+### 5. 상품 삭제 🔒
+```
+DELETE /api/products/{productId}
+Authorization: Bearer {token} (ADMIN 권한 필요)
+```
+
+---
+
+## 📊 재고 (Stock) API
+
+### 1. 재고 목록 조회
+```
+POST /api/stocks/search
+Authorization: Bearer {token}
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "productIds": [1, 2, 3, 4, 5]
+}
+```
+
+</details>
+
+### 2. 단일 재고 조회
+```
+GET /api/stocks/product/{productId}
+Authorization: Bearer {token}
+```
+
+### 3. 재고 증가 🔒
+```
+POST /api/stocks/product/{productId}/increase?quantity={수량}
+Authorization: Bearer {token} (ADMIN 권한 필요)
+```
+
+### 4. 재고 초기화 🔒
+```
+POST /api/stocks/product/{productId}/reset?quantity={수량}
+Authorization: Bearer {token} (ADMIN 권한 필요)
+```
+
+---
+
+## 🎉 이벤트 (Event) API
+
+### 1. 이벤트 생성 🔒
+```
+POST /api/event/create
+Authorization: Bearer {token} (ADMIN 권한 필요)
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "eventType": "HOT_DEAL",
+  "eventDiscount": 20,
+  "eventDuration": 7,
+  "startEventTime": "2025-07-15T00:00:00",
+  "productIds": [1, 2, 3, 4, 5]
+}
+```
+
+</details>
+
+### 2. 이벤트 조회
+```
+POST /api/event/search-event
+Authorization: Bearer {token}
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "productIds": [1, 2, 3, 4, 5]
+}
+```
+
+</details>
+
+---
+
+## 🛒 주문 (Order) API
+
+### 1. 단일 상품 주문
+```
+POST /api/orders/v1
+Authorization: Bearer {token}
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "productId": 1,
+  "quantity": 2
+}
+```
+
+</details>
+
+### 2. 다중 상품 주문
+```
+POST /api/orders/v2
+Authorization: Bearer {token}
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "orderItems": [
+    {
+      "productId": 1,
+      "quantity": 2
+    },
+    {
+      "productId": 2,
+      "quantity": 1
+    }
+  ]
+}
+```
+
+</details>
+
+### 3. 주문 취소
+```
+PUT /api/orders/{orderId}
+Authorization: Bearer {token}
+```
+
+### 4. 주문 조회
+```
+GET /api/orders/{orderId}
+Authorization: Bearer {token}
+```
+
+---
+
+## 🔔 구독 (Subscribe) API
+
+### 1. 상품 구독
+```
+POST /api/subscribe/sub-product
+Authorization: Bearer {token}
+```
+
+<details>
+<summary><b>Request Body</b></summary>
+
+```json
+{
+  "productIds": [1, 2, 3, 4, 5]
+}
+```
+
+</details>
+
+### 2. 구독자 조회
+```
+GET /api/subscribe/search-sub-user?productId={상품ID}
+Authorization: Bearer {token}
+```
+
+### 3. 구독 취소
+```
+DELETE /api/subscribe/cancel-sub?userId={사용자ID}&productId={상품ID}
+Authorization: Bearer {token}
+```
+
+---
+
+## 추가 정보
+
+### 상품 카테고리
+
+<details>
+<summary><b>사용 가능한 카테고리 목록</b></summary>
+
+| 코드 | 한글명 | 코드 | 한글명 |
+|------|--------|------|--------|
+| `ELECTRONICS` | 전자제품 | `HEALTH` | 건강/의료 |
+| `FASHION` | 패션/의류 | `BABY` | 육아/출산 |
+| `BEAUTY` | 뷰티/화장품 | `PET` | 반려동물 |
+| `HOME_LIVING` | 홈/리빙 | `CAR` | 자동차/용품 |
+| `FOOD` | 식품 | `HOBBY` | 취미/수집 |
+| `SPORTS` | 스포츠/레저 | `OFFICE` | 사무/문구 |
+| `BOOKS` | 도서 | `OTHER` | 기타 |
+
+</details>
+
+### 권한 레벨
+- **PUBLIC**: 인증 없이 접근 가능
+- **USER**: 일반 사용자 권한 필요
+- **ADMIN**: 관리자 권한 필요 🔒
+
 ### 테스트 환경
 - 테스트 실행 시 TestContainers가 자동으로 Redis 컨테이너를 생성
 - 통합 테스트에서는 실제 MySQL과 TestContainers Redis를 함께 사용
@@ -579,4 +1025,81 @@ stompClient.subscribe('/topic/notification', function(message) {
 | **연결 관리** | 개별 연결 관리 필요 | 단순한 연결 관리 |
 | **알림 지연** | 마지막 사용자 지연 발생 | 모든 사용자 동시 수신 |
 
+### 개인 블로그 링크``
+서버 → 구독자 1
+      → 구독자 2  
+      → 구독자 3
+      → ...
+      → 구독자 N
+```
 
+#### 발생한 문제들
+
+| 문제 | 설명 | 영향 |
+|------|------|------|
+| **연결 풀링 제한** | 동시 연결 수 한계 | 대용량 사용자 시 연결 끊김 |
+| **동기 처리 지연** | 순차적 메시지 전송 | 마지막 사용자 알림 지연 |
+
+### 고려한 해결 방안들
+- 캐싱 적용
+- 배치 처리
+- **한계**: 웹소켓 연결 풀링 제한은 근본적 해결 불가
+
+### 최종 해결 방안: 브로드캐스트 방식
+
+#### 변경된 구조
+```
+서버: 공통 알림 브로드캐스트
+클라이언트: 구독 상품 필터링 후 처리
+```
+
+<details>
+<summary><b>구현 예시</b></summary>
+
+**서버 측 (브로드캐스트)**
+```java
+@Service
+public class NotificationService {
+    public void notifyProductEvent(WSEventProduct event) {
+        // 모든 연결된 클라이언트에게 브로드캐스트
+        messagingTemplate.convertAndSend(
+            "/topic/notification", 
+            event.toNotificationMessage()
+        );
+    }
+}
+```
+
+**클라이언트 측 (필터링)**
+```javascript
+stompClient.subscribe('/topic/notification', function(message) {
+    const eventData = JSON.parse(message.body);
+    
+    // 사용자가 구독한 상품인지 확인
+    if (userSubscribedProducts.includes(eventData.productId)) {
+        displayNotification(eventData);
+    }
+});
+```
+
+</details>
+
+### 개선 효과
+
+| 개선 항목 | Before | After |
+|-----------|--------|-------|
+| **확장성** | 사용자 수에 비례한 성능 저하 | 사용자 수 무관한 일정 성능 |
+| **처리 방식** | 동기 순차 처리 | 단일 브로드캐스트 |
+| **연결 관리** | 개별 연결 관리 필요 | 단순한 연결 관리 |
+| **알림 지연** | 마지막 사용자 지연 발생 | 모든 사용자 동시 수신 |
+
+### 관련 기술블로그 링크
+- 차준호
+https://juno0112.tistory.com/116 : 도메인주도 설계 및 데이터 흐름 시각화하기
+https://juno0112.tistory.com/117 : 도메인 간 의존성 낮추기 : API 호출 및 스프링 이벤트 구독을 위한 Common 패키지 설계
+https://juno0112.tistory.com/118 : Spring Boot에서 RestTemplate 내부 API 호출 시 JWT 토큰 전달하기
+
+- 김신영
+https://velog.io/@eggtart21/동시성-제어-구현-i193xytg
+https://velog.io/@eggtart21/동시성-제어-구현
+https://velog.io/@eggtart21/락-시간-정한-이유-공식
