@@ -358,8 +358,7 @@ volumes:
 ### 주문 (Order) API
 | API | Method | Endpoint | 권한 | 설명 |
 |-----|--------|----------|------|------|
-| 단일 상품 주문 | POST | `/api/orders/v1` | USER | 단일 상품 주문 (기존 방식) |
-| 다중 상품 주문 | POST | `/api/orders/v2` | USER | 다중 상품 주문 (RestTemplate 방식) |
+| 다중 상품 주문 | POST | `/api/orders/products` | USER | 다중 상품 주문 (RestTemplate 방식) |
 | 주문 취소 | PUT | `/api/orders/{orderId}` | USER | 기존 주문 취소 |
 | 주문 조회 | GET | `/api/orders/{orderId}` | USER | 주문 상세 정보 조회 |
 
