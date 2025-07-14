@@ -25,11 +25,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
     }
 
-//    @ExceptionHandler(CustomException.class)
-//    protected ResponseEntity<Map<String, Object>> handleBusinessException(CustomException e) {
-//        Map<String,Object> map = new HashMap<>();
-//        map.put("error", HttpStatus.BAD_REQUEST);
-//        map.put("message",e.getMessage());
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
-//    }
+    @ExceptionHandler(CustomException.class)
+    protected ResponseEntity<Map<String, Object>> handleBusinessException(CustomException e) {
+        Map<String,Object> map = new HashMap<>();
+        map.put("error", HttpStatus.BAD_REQUEST);
+        map.put("message",e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+    }
 }
