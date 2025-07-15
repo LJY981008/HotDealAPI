@@ -15,16 +15,16 @@ public class EventItem {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "item_id")
     private Long itemId;
-    
+
     @Column(name = "product_id")
     private Long productId;
-    
+
     @Column(name = "discount_price")
     private BigDecimal discountPrice;
-    
+
     @Column(name = "original_price")
     private BigDecimal originalPrice;
-    
+
     @Column(name = "product_name")
     private String productName;
 
@@ -40,7 +40,7 @@ public class EventItem {
         this.eventId = eventId;  // Event 엔티티 대신 ID만 저장
     }
 
-    public EventItem() {
+	public EventItem() {
+	}
 
-    }
 }

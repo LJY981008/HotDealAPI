@@ -39,38 +39,38 @@ public class EventService {
     @Transactional
     public EventResponse createEvent(EventCrateRequest request) {
         long totalStartTime = System.currentTimeMillis();
-        
+
         // 1. Event 저장
         long step1Start = System.currentTimeMillis();
         Event event = eventRepository.save(request.toEvent());
         long step1End = System.currentTimeMillis();
         log.info("1단계 - Event 저장 완료: {}ms", (step1End - step1Start));
-        
+
         // 2. ProductApiClient 호출 (외부 API)
         long step2Start = System.currentTimeMillis();
         List<SearchProductResponse> searchProductResponses = productApiClient.getProducts(request.getProductIds());
         long step2End = System.currentTimeMillis();
         log.info("2단계 - ProductApiClient 호출 완료: {}ms, 조회된 상품 수: {}", (step2End - step2Start), searchProductResponses.size());
-        
+
         // 3. EventItem 객체 생성
         long step3Start = System.currentTimeMillis();
         List<EventItem> eventItems = searchProductResponses.stream().map(response -> new EventItem(response, event.getEventDiscount(), event.getEventId()))
                 .toList();
         long step3End = System.currentTimeMillis();
         log.info("3단계 - EventItem 객체 생성 완료: {}ms", (step3End - step3Start));
-        
+
         // 4. EventItem 벌크 insert
         long step4Start = System.currentTimeMillis();
         eventItemInsertRepository.insertEventItem(eventItems, event.getEventId());
         long step4End = System.currentTimeMillis();
         log.info("4단계 - EventItem 벌크 insert 완료: {}ms", (step4End - step4Start));
-        
+
         // 5. Event에 EventItem 리스트 설정 (조회용)
         long step5Start = System.currentTimeMillis();
         event.setProducts(eventItems);
         long step5End = System.currentTimeMillis();
         log.info("5단계 - Event에 EventItem 리스트 설정 완료: {}ms", (step5End - step5Start));
-        
+
         // 6. WSEventProduct 객체 생성
         long step6Start = System.currentTimeMillis();
         List<WSEventProduct> wsEventProducts = eventItems.stream()
@@ -94,7 +94,7 @@ public class EventService {
         eventPublisher.publishEvent(wsEventProducts);
         long step7End = System.currentTimeMillis();
         log.info("7단계 - 이벤트 발행 완료: {}ms", (step7End - step7Start));
-        
+
         long totalEndTime = System.currentTimeMillis();
         log.info("=== createEvent 총 실행시간: {}ms ===", (totalEndTime - totalStartTime));
 

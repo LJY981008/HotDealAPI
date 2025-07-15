@@ -18,9 +18,8 @@ public class EventResponse {
 
     public EventResponse(Event event) {
         this.eventId = event.getEventId();
-        // 연관관계 제거로 인해 products가 null일 수 있으므로 안전하게 처리
-        this.productId = event.getProducts() != null ? 
-            event.getProducts().stream().map(EventItem::getProductId).collect(Collectors.toList()) : 
+        this.productId = event.getProducts() != null ?
+            event.getProducts().stream().map(EventItem::getProductId).collect(Collectors.toList()) :
             List.of();
         this.startEventTime = event.getStartEventTime();
         this.endEventTime = event.getStartEventTime().plusDays(event.getEventDuration());

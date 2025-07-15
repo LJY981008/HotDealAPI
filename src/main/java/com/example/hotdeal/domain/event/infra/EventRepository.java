@@ -15,7 +15,6 @@ public interface EventRepository extends JpaRepository<Event,Long> {
             "WHERE e.endEventTime < :nowTime AND e.deleted = false")
     int softDeleteExpiredEvents(@Param("nowTime") LocalDateTime nowTime);
 
-    // 연관관계 제거로 인해 단순 Event 조회로 변경
     @Query("SELECT e FROM Event e " +
             "WHERE e.deleted = false")
     List<Event> findActiveEvents();

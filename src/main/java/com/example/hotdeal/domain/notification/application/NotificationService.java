@@ -1,11 +1,5 @@
 package com.example.hotdeal.domain.notification.application;
 
-import com.example.hotdeal.domain.notification.domain.ListenProductEvent;
-import com.example.hotdeal.domain.notification.domain.Notification;
-import com.example.hotdeal.domain.notification.infra.NotificationRepository;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -13,6 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.hotdeal.domain.notification.domain.ListenProductEvent;
+import com.example.hotdeal.domain.notification.domain.Notification;
+import com.example.hotdeal.domain.notification.infra.NotificationRepository;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;

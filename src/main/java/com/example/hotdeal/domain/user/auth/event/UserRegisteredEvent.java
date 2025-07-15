@@ -8,9 +8,11 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(staticName = "of")
 public class UserRegisteredEvent {
+
 	//authId 와 같은 값 저장
 	private final Long userId;
 	private final String email;
 	private final String name;
 	private final LocalDateTime createdAt;
+
 }

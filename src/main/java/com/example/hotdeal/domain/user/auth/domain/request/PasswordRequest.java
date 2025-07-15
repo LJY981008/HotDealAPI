@@ -5,6 +5,8 @@ import lombok.Getter;
 
 @Getter
 public class PasswordRequest {
+
 	@NotBlank(message = "비밀번호는 필수입력값입니다.")
 	private String password;
+
 }

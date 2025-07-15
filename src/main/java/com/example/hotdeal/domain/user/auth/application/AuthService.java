@@ -3,32 +3,31 @@ package com.example.hotdeal.domain.user.auth.application;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import com.example.hotdeal.domain.user.auth.domain.TokenBlacklist;
-import com.example.hotdeal.domain.user.auth.domain.request.PasswordRequest;
-import com.example.hotdeal.domain.user.auth.domain.response.AccessTokenResponse;
-import com.example.hotdeal.domain.user.auth.domain.Auth;
-import com.example.hotdeal.domain.user.auth.domain.request.ReissueRequest;
-import com.example.hotdeal.domain.user.auth.domain.response.TokenResponse;
-import com.example.hotdeal.domain.user.auth.event.UserRegisteredEvent;
-import com.example.hotdeal.domain.user.auth.event.UserRestoredEvent;
-import com.example.hotdeal.domain.user.auth.event.UserWithdrawnEvent;
-import com.example.hotdeal.domain.user.auth.infra.RefreshTokenRepository;
-import com.example.hotdeal.domain.user.auth.infra.TokenBlacklistRepository;
-import com.example.hotdeal.domain.user.auth.security.JwtUtil;
-import com.example.hotdeal.domain.user.auth.infra.AuthRepository;
-import com.example.hotdeal.domain.user.auth.domain.request.LoginRequest;
-import com.example.hotdeal.domain.user.auth.domain.request.SignupRequest;
-import com.example.hotdeal.domain.user.auth.domain.response.CreateUserResponse;
-import com.example.hotdeal.global.enums.CustomErrorCode;
-import com.example.hotdeal.global.exception.CustomException;
-
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.hotdeal.domain.user.auth.domain.Auth;
+import com.example.hotdeal.domain.user.auth.domain.TokenBlacklist;
+import com.example.hotdeal.domain.user.auth.domain.request.LoginRequest;
+import com.example.hotdeal.domain.user.auth.domain.request.PasswordRequest;
+import com.example.hotdeal.domain.user.auth.domain.request.ReissueRequest;
+import com.example.hotdeal.domain.user.auth.domain.request.SignupRequest;
+import com.example.hotdeal.domain.user.auth.domain.response.AccessTokenResponse;
+import com.example.hotdeal.domain.user.auth.domain.response.CreateUserResponse;
+import com.example.hotdeal.domain.user.auth.domain.response.TokenResponse;
+import com.example.hotdeal.domain.user.auth.event.UserRegisteredEvent;
+import com.example.hotdeal.domain.user.auth.event.UserRestoredEvent;
+import com.example.hotdeal.domain.user.auth.event.UserWithdrawnEvent;
+import com.example.hotdeal.domain.user.auth.infra.AuthRepository;
+import com.example.hotdeal.domain.user.auth.infra.RefreshTokenRepository;
+import com.example.hotdeal.domain.user.auth.infra.TokenBlacklistRepository;
+import com.example.hotdeal.domain.user.auth.security.JwtUtil;
+import com.example.hotdeal.global.enums.CustomErrorCode;
+import com.example.hotdeal.global.exception.CustomException;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +49,7 @@ public class AuthService {
 		//회원가입 이벤트 발행
 		eventPublisher.publishEvent(
 			UserRegisteredEvent.of(savedAuth.getAuthId(), savedAuth.getEmail(),
-			savedAuth.getName(), savedAuth.getCreatedAt())
+				savedAuth.getName(), savedAuth.getCreatedAt())
 		);
 
 		return CreateUserResponse.of(savedAuth.getAuthId(), savedAuth.getEmail(), savedAuth.getName());
@@ -83,7 +82,8 @@ public class AuthService {
 		//엑세스 토큰 재발급을 위한 준비
 		Auth foundAuth = getAuthOrThrow(authRepository.findByAuthIdAndDeletedFalse(authId));
 
-		return AccessTokenResponse.of(jwtUtil.createAccessToken(foundAuth.getAuthId(), foundAuth.getEmail(), foundAuth.getRole()));
+		return AccessTokenResponse.of(
+			jwtUtil.createAccessToken(foundAuth.getAuthId(), foundAuth.getEmail(), foundAuth.getRole()));
 	}
 
 	public void registerTokenBlacklist(String accessToken, PasswordRequest request) {
@@ -94,7 +94,7 @@ public class AuthService {
 		Auth foundAuth = getAuthOrThrow(authRepository.findByAuthIdAndDeletedFalse(authId));
 
 		//비밀번호가 요청과 일치 하지않을경우 예외 throw
-		if(!passwordEncoder.matches(request.getPassword(), foundAuth.getPassword())) {
+		if (!passwordEncoder.matches(request.getPassword(), foundAuth.getPassword())) {
 			throw new CustomException(CustomErrorCode.PASSWORD_MISMATCH);
 		}
 
@@ -118,7 +118,7 @@ public class AuthService {
 
 		Auth foundAuth = getAuthOrThrow(authRepository.findByAuthIdAndDeletedFalse(authId));
 
-		if(!passwordEncoder.matches(request.getPassword(), foundAuth.getPassword())) {
+		if (!passwordEncoder.matches(request.getPassword(), foundAuth.getPassword())) {
 			throw new CustomException(CustomErrorCode.PASSWORD_MISMATCH);
 		}
 
@@ -149,7 +149,7 @@ public class AuthService {
 		//복구 이벤트 발행
 		eventPublisher.publishEvent(
 			UserRestoredEvent.of(foundAuth.getAuthId(), foundAuth.getEmail(),
-			foundAuth.getName(), foundAuth.getCreatedAt())
+				foundAuth.getName(), foundAuth.getCreatedAt())
 		);
 	}
 

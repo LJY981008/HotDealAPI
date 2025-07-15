@@ -9,6 +9,8 @@ import lombok.Getter;
 @AllArgsConstructor(staticName = "of")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthResponse<T> {
+
 	private T data;
 	private final String message;
+
 }

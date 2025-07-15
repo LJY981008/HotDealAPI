@@ -8,8 +8,10 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@RedisHash(value = "blacklistToken", timeToLive = 60*30) //엑세스토큰의 최대 시간이 30분임
+@RedisHash(value = "blacklistToken", timeToLive = 60 * 30) //엑세스토큰의 최대 시간이 30분임
 public class TokenBlacklist {
+
 	@Id
 	private String token;
+
 }

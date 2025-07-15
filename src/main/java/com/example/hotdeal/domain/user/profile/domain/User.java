@@ -2,8 +2,10 @@ package com.example.hotdeal.domain.user.profile.domain;
 
 import java.time.LocalDateTime;
 
-import com.example.hotdeal.global.enums.UserRole;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,19 +19,19 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 public class User {
 
-    //authId를 저장
-    @Id
-    private Long userId;
+	//authId를 저장
+	@Id
+	private Long userId;
 
-    @Column(unique = true, nullable = false)
-    private String email;
-    @Column(nullable = false)
-    private String name;
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-    
-    public static User fromUserEvent(Long userId, String email, String name, LocalDateTime createdAt){
-        return new User(userId, email, name, createdAt);
-    }
+	@Column(unique = true, nullable = false)
+	private String email;
+	@Column(nullable = false)
+	private String name;
+	@Column(nullable = false)
+	private LocalDateTime createdAt;
+
+	public static User fromUserEvent(Long userId, String email, String name, LocalDateTime createdAt) {
+		return new User(userId, email, name, createdAt);
+	}
 
 }

@@ -1,7 +1,8 @@
 package com.example.hotdeal.domain.product.infra;
 
-import com.example.hotdeal.domain.product.domain.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.hotdeal.domain.product.domain.Product;
 
 public interface ProductJpaRepository extends JpaRepository<Product, Long> {
 }
