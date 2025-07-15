@@ -1246,8 +1246,227 @@ stompClient.subscribe('/topic/notification', function(message) {
 | **연결 관리** | 개별 연결 관리 필요 | 단순한 연결 관리 |
 | **알림 지연** | 마지막 사용자 지연 발생 | 모든 사용자 동시 수신 |
 
+## 6. 핫딜 이벤트 대용량 등록 시 성능 문제
 
----
+### 성능 측정 결과 (개선 전)
+
+```
+1단계 - Event 저장 완료: 22ms
+2단계 - ProductApiClient 호출 완료: 236ms (조회된 상품 수: 10000)
+3단계 - EventItem 객체 생성 완료: 4ms
+4단계 - EventItem insert 완료: 1052ms
+5단계 - Event에 EventItem 리스트 설정 완료: 0ms
+6단계 - WSEventProduct 객체 생성 완료: 1ms
+7단계 - 이벤트 발행 완료: 799ms
+=== createEvent 총 실행시간: 2115ms ===
+8단계 - 컨트롤러 실행 완료: 4126ms
+```
+
+**문제점**:
+
+-   컨트롤러 전체 실행 시간이 4126ms로 심각한 지연
+-   EventItem 벌크 insert가 1052ms로 큰 병목
+-   이벤트 리스너가 동기적으로 처리되어 지연 발생
+
+### 해결 방안
+
+#### 1\. Notification 벌크 인서트 적용
+<details>
+ <summary><b>구현 예시</b></summary>
+ 
+ #### 개선 전: 개별 insert
+
+```
+// 기존 방식 - 개별 insert
+notificationRepository.save(notification);
+```
+
+#### 개선 후: 벌크 insert
+
+```
+@Service
+public class NotificationService {
+    private final List<Notification> buffer = new ArrayList<>();
+
+    public void addNotification(Notification notification) {
+        synchronized (lock) {
+            buffer.add(notification);
+            if(buffer.size() >= 1000) {
+                // 1000개씩 벌크 insert
+                insertBatch();
+            }
+        }
+    }
+
+    @Async
+    public void insertBatch() {
+        List<Notification> notifications;
+        synchronized (lock) {
+            notifications = new ArrayList<>(buffer);
+            buffer.clear();
+        }
+        notificationRepository.insertNotifications(notifications);
+    }
+}
+```
+
+**개선 효과**: 개별 insert → 벌크 insert로 변경하여 DB 호출 횟수 대폭 감소
+</details>
+
+#### 2\. EventItem 벌크 인서트 적용
+<details>
+ <summary><b>구현 예시</b></summary>
+ 
+ #### 개선 전: JPA saveAll 사용
+
+```
+// 기존 방식
+eventItemRepository.saveAll(eventItems);
+```
+
+#### 개선 후: JdbcTemplate batchUpdate 사용
+
+```
+@Repository
+public class EventItemInsertRepository {
+
+    public void insertEventItem(List<EventItem> eventItems, Long eventId) {
+        String sql = "INSERT INTO event_items (event_id, product_id, product_name, original_price, discount_price, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        jdbcTemplate.batchUpdate(sql, eventItems, 1000, (ps, eventItem) -> {
+            ps.setLong(1, eventId);
+            ps.setLong(2, eventItem.getProductId());
+            ps.setString(3, eventItem.getProductName());
+            ps.setBigDecimal(4, eventItem.getOriginalPrice());
+            ps.setBigDecimal(5, eventItem.getDiscountPrice());
+            ps.setObject(6, LocalDateTime.now());
+            ps.setObject(7, LocalDateTime.now());
+        });
+    }
+}
+```
+
+**개선 효과**:
+
+-   JPA saveAll → JdbcTemplate batchUpdate로 변경
+-   배치 크기 1000으로 설정하여 메모리 효율성 향상
+</details>
+
+#### 3\. 이벤트 발행 비동기 처리 + 트랜잭션 일관성 보장
+<details>
+ <summary><b>구현 예시</b></summary>
+ 
+ #### 문제 상황
+
+```
+@Transactional
+public EventResponse createEvent(EventCrateRequest request) {
+    // ... 데이터 저장 ...
+
+    // 이벤트 발행 (동기적)
+    wsEventProducts.forEach(wsEvent -> {
+        eventPublisher.publishEvent(wsEvent);
+    });
+
+    return new EventResponse(event);
+}
+```
+
+**문제점**: 이벤트 발행이 동기적으로 처리되어 지연 발생
+
+#### 해결 방안: @TransactionalEventListener 적용
+
+```
+@Component
+public class NotificationListener {
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void addProductDiscountEvent(WSEventProduct event) {
+        try {
+            log.info("addProductDiscountEvent 시작 - 단일 이벤트: {}", event.product_id());
+
+            ListenProductEvent listenProductEvent = new ListenProductEvent(event);
+            notificationService.notifyProductEventMessage(listenProductEvent);
+
+            log.info("addProductDiscountEvent 종료");
+        } catch (Exception e) {
+            log.error("addProductDiscountEvent 처리 실패 message : {}", e.getMessage());
+        }
+    }
+}
+```
+
+**개선 효과**:
+
+-   트랜잭션 커밋 후 이벤트 리스너 실행으로 데이터 일관성 보장
+-   비동기 처리로 컨트롤러 응답 시간 단축
+-   트랜잭션 롤백 시 이벤트 리스너 미실행으로 안정성 확보
+</details>
+
+#### 4\. JPA 연관관계 매핑 제거
+<details>
+ <summary><b>구현 예시</b></summary>
+ 
+ #### 개선 전: 일대다 연관관계
+
+```
+@Entity
+public class Event {
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
+    private List<EventItem> products;
+}
+
+@Entity
+public class EventItem {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
+    private Event event;
+}
+```
+
+**문제점**:
+
+-   조인 테이블(events\_products)에 대량 insert 쿼리 발생
+-   트랜잭션 종료 시 지연 발생
+-   메모리 사용량 증가
+
+#### 개선 후: 연관관계 제거
+
+```
+@Entity
+public class Event {
+    @Transient  // 조회용으로만 사용
+    private List<EventItem> products;
+}
+
+@Entity
+public class EventItem {
+    private Long eventId;  // 단순 외래키만 저장
+}
+```
+
+**개선 효과**:
+
+-   조인 테이블 insert 쿼리 제거
+-   트랜잭션 종료 시 오버헤드 대폭 감소
+-   메모리 사용량 최적화
+</details>
+
+
+### 성능 측정 결과 (개선 후)
+
+```
+1단계 - Event 저장 완료: 29ms
+2단계 - ProductApiClient 호출 완료: 260ms (조회된 상품 수: 10000)
+3단계 - EventItem 객체 생성 완료: 3ms
+4단계 - EventItem 벌크 insert 완료: 520ms
+5단계 - Event에 EventItem 리스트 설정 완료: 0ms
+6단계 - WSEventProduct 객체 생성 완료: 1ms
+7단계 - 이벤트 발행 완료: 10ms
+=== createEvent 총 실행시간: 823ms ===
+8단계 - 컨트롤러 실행: 844ms
+```
 
 ### 관련 블로그
 
