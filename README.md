@@ -1246,6 +1246,7 @@ stompClient.subscribe('/topic/notification', function(message) {
 | **연결 관리** | 개별 연결 관리 필요 | 단순한 연결 관리 |
 | **알림 지연** | 마지막 사용자 지연 발생 | 모든 사용자 동시 수신 |
 
+
 ---
 
 ### 관련 블로그
@@ -1264,7 +1265,8 @@ stompClient.subscribe('/topic/notification', function(message) {
 
 
 이준영
-- [https://velog.io/@eggtart21/%EB%9D%BD-%EC%8B%9C%EA%B0%84-%EC%A0%95%ED%95%9C-%EC%9D%B4%EC%9C%A0-%EA%B3%B5%EC%8B%9D](https://t-era.tistory.com/292) : 현재 웹소켓 기능의 문제점
+- https://t-era.tistory.com/292 : 현재 웹소켓 기능의 문제점
+- https://t-era.tistory.com/293 : 대용량 데이터 삽입 시의 성능 개선
 
 최영재
 - https://velog.io/@teopteop/TIL-Spring-%EB%B3%B4%EC%83%81-%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98 : 이벤트 기반 아키텍처에서의 무결성 보완 - 보상 트랜잭션
