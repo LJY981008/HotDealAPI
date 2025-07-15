@@ -9,6 +9,8 @@ import com.example.hotdeal.domain.notification.domain.ListenProductEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
@@ -18,7 +20,7 @@ public class NotificationListener {
 	private final NotificationService notificationService;
 
 	@Async
-	@EventListener
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void addProductDiscountEvent(WSEventProduct event) {
 		try {
 			log.info("addProductDiscountEvent 시작 - 단일 이벤트: {}", event.product_id());

@@ -29,7 +29,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventItemRepository eventItemRepository;
     private final EventItemInsertRepository eventItemInsertRepository;
-    private final EventPublisherAsync eventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
     private final ProductApiClient productApiClient;
     /**
      * 이벤트 생성
@@ -91,7 +91,9 @@ public class EventService {
 
         long step7Start = System.currentTimeMillis();
         log.info("이벤트 발행 시작 - 총 {}개 이벤트", wsEventProducts.size());
-        eventPublisher.publishEvent(wsEventProducts);
+        for (WSEventProduct wsEventProduct : wsEventProducts) {
+            eventPublisher.publishEvent(wsEventProduct);
+        }
         long step7End = System.currentTimeMillis();
         log.info("7단계 - 이벤트 발행 완료: {}ms", (step7End - step7Start));
 
