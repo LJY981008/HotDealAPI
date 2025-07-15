@@ -44,7 +44,10 @@ public class SecurityConfig {
                     .requestMatchers(
                         "/api/auth/signup",
                         "/api/auth/login",
-                        "/api/auth/reissue"
+                        "/api/auth/reissue",
+                        "/ws/**",
+                        "/topic/**",
+                        "/app/**"
                     )
                     .permitAll()
                     .anyRequest()

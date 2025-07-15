@@ -18,10 +18,6 @@ public class Event extends BaseEntity {
     @Column(name = "event_id")
     private Long eventId;
 
-    @Setter
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<EventItem> products;
-
     @Column(name = "event_type")
     private EventType eventType;
 
@@ -36,6 +32,10 @@ public class Event extends BaseEntity {
 
     @Column(name = "end_event_time")
     private LocalDateTime endEventTime;
+
+    @Transient
+    @Setter
+    private List<EventItem> products;
 
     public Event() {}
 

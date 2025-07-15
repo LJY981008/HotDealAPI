@@ -2,7 +2,9 @@ package com.example.hotdeal.domain.common.client.product.dto;
 
 import com.example.hotdeal.domain.product.domain.Product;
 import com.example.hotdeal.domain.product.domain.ProductCategory;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
@@ -10,6 +12,8 @@ import java.math.BigDecimal;
  * 프로덕트 조회 결과
  */
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class SearchProductResponse {
     private Long productId;
     private String productName;
@@ -17,8 +21,6 @@ public class SearchProductResponse {
     private String productDescription;
     private String productImageUri;
     private ProductCategory productCategory;
-
-    public SearchProductResponse() {}
 
     public SearchProductResponse(Product product) {
         this.productId = product.getProductId();

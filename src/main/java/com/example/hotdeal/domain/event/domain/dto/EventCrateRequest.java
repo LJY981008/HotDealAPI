@@ -4,6 +4,7 @@ import com.example.hotdeal.domain.event.domain.entity.Event;
 import com.example.hotdeal.domain.event.enums.EventType;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ import java.util.List;
  * 이벤트 생성 DTO
  */
 @Getter
+@AllArgsConstructor
 public class EventCrateRequest {
 
     @NotNull
