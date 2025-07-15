@@ -42,34 +42,134 @@
     <title>WebSocket Test</title>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        #messages { max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+    </style>
 </head>
 <body>
     <h1>WebSocket 알림 테스트</h1>
+    
+    <div class="status info">
+        <strong>연결 상태:</strong> <span id="connectionStatus">연결 시도 중...</span>
+    </div>
+    
+    <div>
+        <button onclick="testConnection()">연결 테스트</button>
+        <button onclick="clearMessages()">메시지 지우기</button>
+    </div>
+    
     <div id="messages"></div>
     
     <script>
-        const socket = new SockJS('http://localhost:8080/ws');
-        const stompClient = Stomp.over(socket);
+        let stompClient = null;
+        let socket = null;
         
-        stompClient.connect({}, function(frame) {
-            console.log('Connected: ' + frame);
-            document.getElementById('messages').innerHTML += '<p>✅ 웹소켓 연결 성공</p>';
+        function addMessage(message, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const timestamp = new Date().toLocaleTimeString();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `status ${type}`;
+            messageDiv.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function updateConnectionStatus(status, type = 'info') {
+            document.getElementById('connectionStatus').textContent = status;
+            document.getElementById('connectionStatus').className = type;
+        }
+        
+        function connect() {
+            addMessage('웹소켓 연결 시도 중...', 'info');
             
-            stompClient.subscribe('/topic/notification', function(message) {
-                console.log('알림 받음:', message.body);
-                document.getElementById('messages').innerHTML += '<p>🔔 알림: ' + message.body + '</p>';
-            });
-        }, function(error) {
-            console.log('STOMP error: ' + error);
-            document.getElementById('messages').innerHTML += '<p>❌ 연결 실패: ' + error + '</p>';
+            try {
+                // SockJS를 통한 연결
+                socket = new SockJS('http://localhost:8080/ws');
+                stompClient = Stomp.over(socket);
+                
+                // 디버그 모드 활성화
+                stompClient.debug = function(str) {
+                    console.log('STOMP Debug:', str);
+                    addMessage('STOMP Debug: ' + str, 'info');
+                };
+                
+                stompClient.connect({}, 
+                    function(frame) {
+                        console.log('Connected: ' + frame);
+                        addMessage('✅ 웹소켓 연결 성공: ' + frame, 'success');
+                        updateConnectionStatus('연결됨', 'success');
+                        
+                        // 알림 구독
+                        stompClient.subscribe('/topic/notification', function(message) {
+                            console.log('알림 받음:', message.body);
+                            addMessage('🔔 알림: ' + message.body, 'success');
+                        });
+                        
+                        // 이벤트 구독
+                        stompClient.subscribe('/topic/events', function(message) {
+                            console.log('이벤트 받음:', message.body);
+                            addMessage('📡 이벤트: ' + message.body, 'success');
+                        });
+                        
+                    }, 
+                    function(error) {
+                        console.log('STOMP error: ' + error);
+                        addMessage('❌ 연결 실패: ' + error, 'error');
+                        updateConnectionStatus('연결 실패', 'error');
+                    }
+                );
+                
+            } catch (error) {
+                console.error('연결 오류:', error);
+                addMessage('❌ 연결 오류: ' + error.message, 'error');
+                updateConnectionStatus('연결 오류', 'error');
+            }
+        }
+        
+        function testConnection() {
+            addMessage('연결 테스트 시작...', 'info');
+            
+            // 기존 연결이 있으면 해제
+            if (stompClient && stompClient.connected) {
+                stompClient.disconnect();
+                addMessage('기존 연결 해제', 'info');
+            }
+            
+            // 새로 연결
+            setTimeout(connect, 1000);
+        }
+        
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+        
+        // 페이지 로드 시 자동 연결
+        window.onload = function() {
+            addMessage('페이지 로드됨, 웹소켓 연결 시도...', 'info');
+            connect();
+        };
+        
+        // 페이지 종료 시 연결 해제
+        window.addEventListener('beforeunload', function() {
+            if (stompClient && stompClient.connected) {
+                stompClient.disconnect();
+                addMessage('페이지 종료로 인한 연결 해제', 'info');
+            }
         });
         
         // 연결 상태 모니터링
-        window.addEventListener('beforeunload', function() {
-            if (stompClient.connected) {
-                stompClient.disconnect();
+        setInterval(function() {
+            if (stompClient && stompClient.connected) {
+                updateConnectionStatus('연결됨', 'success');
+            } else {
+                updateConnectionStatus('연결 끊김', 'error');
             }
-        });
+        }, 5000);
     </script>
 </body>
 </html> 
